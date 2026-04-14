@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
       const fee = feeMap.get(String(s._id));
       return {
         ...s,
+        hasParentAccount: !!s.parentId,
         fees: fee ? [{ status: fee.status, feeType: fee.feeType, amount: fee.amount, paidAmount: fee.paidAmount, dueDate: fee.dueDate }] : [],
       };
     });

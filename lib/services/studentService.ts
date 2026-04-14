@@ -32,6 +32,14 @@ export interface StudentFormData {
   admissionDate?: string;
 }
 
+export interface ParentAccountCredentials {
+  email: string;
+  password: string;
+  parentName: string;
+  studentName: string;
+  studentId: string;
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   const json = await res.json();
   if (!res.ok || !json.success) {
@@ -97,5 +105,23 @@ export const studentService = {
     a.download = `students_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  },
+
+  // ── Parent Account Management ─────────────────────────────────────────
+  async createParentAccount(studentId: string): Promise<ParentAccountCredentials> {
+    const res = await fetch(`/api/students/${studentId}/parent-account`, { method: "POST" });
+    const json = await handleResponse<{ success: boolean; data: ParentAccountCredentials }>(res);
+    return json.data;
+  },
+
+  async resetParentPassword(studentId: string): Promise<ParentAccountCredentials> {
+    const res = await fetch(`/api/students/${studentId}/parent-account`, { method: "PUT" });
+    const json = await handleResponse<{ success: boolean; data: ParentAccountCredentials }>(res);
+    return json.data;
+  },
+
+  async revokeParentAccount(studentId: string): Promise<void> {
+    const res = await fetch(`/api/students/${studentId}/parent-account`, { method: "DELETE" });
+    await handleResponse<{ success: boolean }>(res);
   },
 };

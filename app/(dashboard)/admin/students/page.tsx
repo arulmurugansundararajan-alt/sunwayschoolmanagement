@@ -13,7 +13,7 @@ import {
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter, DialogCloseButton,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { studentService, StudentFormData } from "@/lib/services/studentService";
+import { studentService, StudentFormData, ParentAccountCredentials } from "@/lib/services/studentService";
 import { Student } from "@/types";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { SCHOOL_GRADES, getSectionFromGrade } from "@/lib/constants";
@@ -21,6 +21,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import {
   Search, Plus, Eye, Edit, Trash2, Download,
   Users, UserCheck, AlertTriangle, Loader2, AlertCircle, CheckCircle2,
+  KeyRound, Copy, Check, ShieldOff, RefreshCw,
 } from "lucide-react";
 
 // â”€â”€â”€ Validation schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -67,6 +68,14 @@ export default function StudentsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState<{ studentId: string; admissionNumber: string; name: string } | null>(null);
+
+  // Parent account state
+  const [parentAccountCredentials, setParentAccountCredentials] = useState<ParentAccountCredentials | null>(null);
+  const [parentAccountAction, setParentAccountAction] = useState<"create" | "reset" | null>(null);
+  const [parentRevokeTarget, setParentRevokeTarget] = useState<Student | null>(null);
+  const [parentAccountLoading, setParentAccountLoading] = useState(false);
+  const [parentAccountError, setParentAccountError] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<"email" | "password" | null>(null);
 
   // â”€â”€ Fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchStudents = useCallback(async () => {
@@ -190,6 +199,57 @@ export default function StudentsPage() {
     return start + i;
   });
 
+  // ── Parent account management handlers ────────────────────────────────
+  const handleCreateParentAccount = async (s: Student) => {
+    setParentAccountLoading(true);
+    setParentAccountError(null);
+    setParentAccountAction("create");
+    try {
+      const creds = await studentService.createParentAccount(s._id);
+      setParentAccountCredentials(creds);
+      await fetchStudents();
+    } catch (err) {
+      setParentAccountError(err instanceof Error ? err.message : "Failed to create parent account");
+    } finally {
+      setParentAccountLoading(false);
+    }
+  };
+
+  const handleResetParentPassword = async (s: Student) => {
+    setParentAccountLoading(true);
+    setParentAccountError(null);
+    setParentAccountAction("reset");
+    try {
+      const creds = await studentService.resetParentPassword(s._id);
+      setParentAccountCredentials(creds);
+    } catch (err) {
+      setParentAccountError(err instanceof Error ? err.message : "Failed to reset parent password");
+    } finally {
+      setParentAccountLoading(false);
+    }
+  };
+
+  const handleRevokeParentAccount = async () => {
+    if (!parentRevokeTarget) return;
+    setParentAccountLoading(true);
+    setParentAccountError(null);
+    try {
+      await studentService.revokeParentAccount(parentRevokeTarget._id);
+      setParentRevokeTarget(null);
+      await fetchStudents();
+    } catch (err) {
+      setParentAccountError(err instanceof Error ? err.message : "Failed to revoke parent access");
+    } finally {
+      setParentAccountLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, field: "email" | "password") => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   return (
     <div className="space-y-5">
       {/* Stats */}
@@ -308,6 +368,7 @@ export default function StudentsPage() {
                 <TableHead>Attendance</TableHead>
                 <TableHead>Fee Status</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Parent Login</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -367,6 +428,30 @@ export default function StudentsPage() {
                     <Badge variant={student.isActive ? "success" : "secondary"}>
                       {student.isActive ? "Active" : "Inactive"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {student.hasParentAccount ? (
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="success" className="text-xs">Active</Badge>
+                        <Button variant="ghost" size="icon-sm" title="Reset Parent Password"
+                          className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                          onClick={() => handleResetParentPassword(student)}>
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon-sm" title="Revoke Parent Access"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setParentRevokeTarget(student)}>
+                          <ShieldOff className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="ghost" size="sm" title="Create Parent Login"
+                        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1 text-xs"
+                        onClick={() => handleCreateParentAccount(student)}>
+                        <KeyRound className="w-3.5 h-3.5" />
+                        Create
+                      </Button>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -611,6 +696,107 @@ export default function StudentsPage() {
           <Button variant="destructive" onClick={handleDelete} disabled={submitting} className="gap-2">
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Deactivate
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* ── Parent Account Credentials Modal ────────────────────────────── */}
+      <Dialog
+        open={!!parentAccountAction}
+        onClose={() => { if (!parentAccountLoading) { setParentAccountCredentials(null); setParentAccountAction(null); setParentAccountError(null); } }}
+        maxWidth="sm"
+      >
+        <DialogHeader>
+          <DialogTitle>{parentAccountAction === "create" ? "Parent Login Account Created" : "Parent Password Reset"}</DialogTitle>
+          <DialogCloseButton onClose={() => { if (!parentAccountLoading) { setParentAccountCredentials(null); setParentAccountAction(null); setParentAccountError(null); } }} />
+        </DialogHeader>
+        <DialogContent>
+          {parentAccountLoading ? (
+            <div className="flex items-center justify-center py-8 text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              {parentAccountAction === "create" ? "Creating parent account..." : "Resetting parent password..."}
+            </div>
+          ) : parentAccountError ? (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {parentAccountError}
+            </div>
+          ) : parentAccountCredentials ? (
+            <div className="space-y-4">
+              <div className="flex flex-col items-center text-center gap-2 pb-2">
+                <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                  <KeyRound className="w-7 h-7 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">{parentAccountCredentials.parentName}</h3>
+                <p className="text-xs text-gray-500">Parent of {parentAccountCredentials.studentName} ({parentAccountCredentials.studentId})</p>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+                <p className="text-xs font-semibold text-amber-700">
+                  ⚠ This password will only be shown once. Please copy and share it with the parent.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Login Email</p>
+                  <p className="text-sm font-mono font-semibold text-gray-900">{parentAccountCredentials.email}</p>
+                </div>
+                <Button variant="ghost" size="icon-sm" onClick={() => copyToClipboard(parentAccountCredentials.email, "email")} className="flex-shrink-0">
+                  {copiedField === "email" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Password</p>
+                  <p className="text-sm font-mono font-semibold text-gray-900">{parentAccountCredentials.password}</p>
+                </div>
+                <Button variant="ghost" size="icon-sm" onClick={() => copyToClipboard(parentAccountCredentials.password, "password")} className="flex-shrink-0">
+                  {copiedField === "password" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+        <DialogFooter>
+          <Button onClick={() => { setParentAccountCredentials(null); setParentAccountAction(null); setParentAccountError(null); }} disabled={parentAccountLoading}>
+            Done
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* ── Revoke Parent Access Confirm Modal ──────────────────────────── */}
+      <Dialog open={!!parentRevokeTarget} onClose={() => !parentAccountLoading && setParentRevokeTarget(null)} maxWidth="sm">
+        <DialogHeader>
+          <DialogTitle>Revoke Parent Login Access</DialogTitle>
+          <DialogCloseButton onClose={() => !parentAccountLoading && setParentRevokeTarget(null)} />
+        </DialogHeader>
+        <DialogContent>
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <ShieldOff className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Revoke parent login access?</p>
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-medium">{parentRevokeTarget?.parentName}</span> (parent of {parentRevokeTarget?.name}) will no longer
+                be able to log in to the parent portal. You can create a new login account later.
+              </p>
+            </div>
+          </div>
+          {parentAccountError && (
+            <div className="flex items-center gap-2 p-3 mt-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {parentAccountError}
+            </div>
+          )}
+        </DialogContent>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setParentRevokeTarget(null)} disabled={parentAccountLoading}>Cancel</Button>
+          <Button variant="destructive" onClick={handleRevokeParentAccount} disabled={parentAccountLoading} className="gap-2">
+            {parentAccountLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Revoke Access
           </Button>
         </DialogFooter>
       </Dialog>

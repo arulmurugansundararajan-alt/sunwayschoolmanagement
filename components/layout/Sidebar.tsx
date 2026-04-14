@@ -21,6 +21,7 @@ const adminNavItems = [
   { label: "Staff", href: "/admin/staff", icon: UserCheck },
   { label: "Timetable", href: "/admin/timetable", icon: Clock },
   { label: "Fee Management", href: "/admin/fees", icon: DollarSign },
+  { label: "Events & Calendar", href: "/admin/events", icon: Calendar },
   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
 ];
 
@@ -29,6 +30,7 @@ const staffNavItems = [
   { label: "My Classes", href: "/staff/classes", icon: BookOpen },
   { label: "Attendance", href: "/staff/attendance", icon: ClipboardList },
   { label: "Marks Entry", href: "/staff/marks", icon: Award },
+  { label: "Calendar", href: "/staff/calendar", icon: Calendar },
   { label: "Communication", href: "/staff/communication", icon: MessageSquare },
 ];
 
@@ -38,6 +40,7 @@ const parentNavItems = [
   { label: "Attendance", href: "/parent/attendance", icon: Calendar },
   { label: "Report Card", href: "/parent/report-card", icon: FileText },
   { label: "Fee Payment", href: "/parent/fees", icon: DollarSign },
+  { label: "Calendar", href: "/parent/calendar", icon: Calendar },
   { label: "Messages", href: "/parent/messages", icon: MessageSquare },
 ];
 

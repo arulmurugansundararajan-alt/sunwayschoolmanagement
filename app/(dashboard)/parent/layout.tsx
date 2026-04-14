@@ -16,6 +16,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/parent/report-card": { title: "Report Card", subtitle: "Official academic report" },
   "/parent/fees": { title: "Fee Management", subtitle: "Fee status and payments" },
   "/parent/messages": { title: "Messages", subtitle: "Communicate with teachers" },
+  "/parent/calendar": { title: "School Calendar", subtitle: "Events and holidays" },
 };
 
 export default function ParentLayout({ children }: { children: React.ReactNode }) {

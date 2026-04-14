@@ -17,6 +17,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/admin/timetable": { title: "Timetable", subtitle: "Class schedules and periods" },
   "/admin/fees": { title: "Fee Management", subtitle: "Fee collection and records" },
   "/admin/reports": { title: "Reports & Analytics", subtitle: "Academic and financial reports" },
+  "/admin/events": { title: "Events & Calendar", subtitle: "Manage school events and holidays" },
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

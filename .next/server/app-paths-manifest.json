@@ -1,12 +1,10 @@
 {
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/students/route": "app/api/students/route.js",
-  "/page": "app/page.js",
+  "/api/parent/me/route": "app/api/parent/me/route.js",
+  "/api/events/route": "app/api/events/route.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(dashboard)/staff/calendar/page": "app/(dashboard)/staff/calendar/page.js",
+  "/(dashboard)/staff/page": "app/(dashboard)/staff/page.js",
   "/(dashboard)/parent/page": "app/(dashboard)/parent/page.js",
-  "/(dashboard)/parent/attendance/page": "app/(dashboard)/parent/attendance/page.js",
-  "/(dashboard)/parent/performance/page": "app/(dashboard)/parent/performance/page.js",
-  "/(dashboard)/parent/messages/page": "app/(dashboard)/parent/messages/page.js",
-  "/(dashboard)/admin/page": "app/(dashboard)/admin/page.js",
-  "/(dashboard)/admin/students/page": "app/(dashboard)/admin/students/page.js"
+  "/(dashboard)/parent/calendar/page": "app/(dashboard)/parent/calendar/page.js"
 }

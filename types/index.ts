@@ -45,6 +45,7 @@ export interface Student {
   parentName: string;
   parentPhone: string;
   parentEmail: string;
+  hasParentAccount?: boolean;
   admissionDate: string;
   admissionNumber: string;
   isActive: boolean;

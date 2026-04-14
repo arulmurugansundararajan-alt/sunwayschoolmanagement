@@ -15,6 +15,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/staff/attendance": { title: "Attendance", subtitle: "Mark and manage attendance" },
   "/staff/marks": { title: "Marks Entry", subtitle: "Enter and manage student marks" },
   "/staff/communication": { title: "Communication", subtitle: "Messages and notifications" },
+  "/staff/calendar": { title: "School Calendar", subtitle: "Events and holidays" },
 };
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
