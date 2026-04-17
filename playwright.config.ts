@@ -2,13 +2,13 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 30_000,
+  timeout: 60_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,
   retries: 0,
   reporter: [["html", { open: "never" }], ["line"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3001",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

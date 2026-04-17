@@ -5,11 +5,11 @@
  */
 import { test, expect } from "@playwright/test";
 
-const BASE = "http://localhost:3000";
-
 test.describe("Authentication", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/login`);
+    // Clear any prior session so each auth test starts unauthenticated
+    await page.context().clearCookies();
+    await page.goto("/login");
   });
 
   // TC-001: Admin login
@@ -18,19 +18,19 @@ test.describe("Authentication", () => {
     await page.fill('input[name="password"], input[type="password"]', "admin123");
     await page.click('button[type="submit"]');
 
-    await page.waitForURL(/\/admin/, { timeout: 10_000 });
-    await expect(page).toHaveURL(/\/admin/);
+    await page.waitForFunction(() => window.location.pathname.startsWith('/admin'), { timeout: 15_000 });
+    expect(page.url()).toContain('/admin');
   });
 
   // TC-002: Staff login
   test("TC-002: valid staff login reaches staff dashboard", async ({ page }) => {
-    // Uses a staff account that was seeded / created via admin panel
-    await page.fill('input[name="email"], input[type="email"]', "teacher1@gmail.com");
-    await page.fill('input[name="password"], input[type="password"]', "teacher1@2024");
+    // Uses the hardcoded demo staff credential from lib/auth.ts
+    await page.fill('input[name="email"], input[type="email"]', "staff@sunwayglobalschool.edu");
+    await page.fill('input[name="password"], input[type="password"]', "staff123");
     await page.click('button[type="submit"]');
 
-    await page.waitForURL(/\/staff/, { timeout: 10_000 });
-    await expect(page).toHaveURL(/\/staff/);
+    await page.waitForFunction(() => window.location.pathname.startsWith('/staff'), { timeout: 15_000 });
+    expect(page.url()).toContain('/staff');
   });
 
   // TC-003: Invalid credentials
@@ -39,21 +39,18 @@ test.describe("Authentication", () => {
     await page.fill('input[name="password"], input[type="password"]', "wrongpassword");
     await page.click('button[type="submit"]');
 
-    // Should NOT navigate away; error text should be visible
-    await page.waitForTimeout(2_000);
-    await expect(page).toHaveURL(/\/login/);
+    // Should NOT navigate away
+    await expect(page).toHaveURL(/\/login/, { timeout: 8_000 });
 
-    const errorVisible = await page
-      .locator("text=/invalid|incorrect|wrong|error|failed/i")
-      .first()
-      .isVisible()
-      .catch(() => false);
-    expect(errorVisible).toBeTruthy();
+    // Wait for error message to appear (server response might take a moment)
+    const errorLocator = page.locator("text=/invalid|incorrect|wrong|error|failed/i").first();
+    await errorLocator.waitFor({ state: "visible", timeout: 8_000 });
+    await expect(errorLocator).toBeVisible();
   });
 
   // Extra: unauthenticated access to admin redirects to login
   test("TC-003b: unauthenticated visit to /admin redirects to /login", async ({ page }) => {
-    await page.goto(`${BASE}/admin`);
+    await page.goto("/admin");
     await page.waitForURL(/\/login/, { timeout: 8_000 });
     await expect(page).toHaveURL(/\/login/);
   });

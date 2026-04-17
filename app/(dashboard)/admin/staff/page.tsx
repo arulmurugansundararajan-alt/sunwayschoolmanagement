@@ -287,7 +287,7 @@ export default function StaffManagementPage() {
               onClick={() => {
                 setShowAddModal(true);
                 setAddSuccess(null);
-                addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male" });
+                addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male", teacherType: "class_teacher" });
               }}
             >
               <Plus className="w-4 h-4" /> Add Staff
