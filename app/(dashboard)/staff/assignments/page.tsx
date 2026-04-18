@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useNotifications } from "@/components/providers/NotificationContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,6 +71,7 @@ function isPastDue(dueDate: string) {
 }
 
 export default function StaffAssignmentsPage() {
+  const { addNotification } = useNotifications();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +132,14 @@ export default function StaffAssignmentsPage() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message || "Failed");
+      addNotification({
+        title: "New Assignment: " + values.title,
+        message: `${values.subject} assignment for Class ${values.className} is due on ${new Date(values.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}.`,
+        type: "info",
+        targetRole: "parent",
+        createdBy: "staff",
+        category: "homework",
+      });
       setAddSuccess(true);
       await loadData();
     } catch (err) {

@@ -41,14 +41,14 @@ export function Dialog({ open, onClose, children, maxWidth = "lg" }: DialogProps
       />
       <div
         className={cn(
-          "relative bg-white rounded-2xl shadow-2xl w-full flex flex-col max-h-[85vh] sm:max-h-[90vh]",
+          "relative bg-white shadow-2xl w-full flex flex-col",
           "border-2 border-purple-200",
           "ring-1 ring-purple-100",
           maxWidthClasses[maxWidth]
         )}
       >
         {/* Purple top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 rounded-t-2xl flex-shrink-0" />
+        <div className="h-1 w-full bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 flex-shrink-0" />
         {children}
       </div>
     </div>
@@ -58,7 +58,7 @@ export function Dialog({ open, onClose, children, maxWidth = "lg" }: DialogProps
 export function DialogHeader({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
-      "flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-purple-200 flex-shrink-0 bg-white rounded-t-2xl",
+      "flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-purple-200 flex-shrink-0 bg-white",
       className
     )}>
       {children}
@@ -71,13 +71,13 @@ export function DialogTitle({ children, className }: { children: React.ReactNode
 }
 
 export function DialogContent({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1", className)}>{children}</div>;
+  return <div className={cn("px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto max-h-[65vh]", className)}>{children}</div>;
 }
 
 export function DialogFooter({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
-      "flex items-center justify-end gap-2 sm:gap-3 px-5 sm:px-6 py-3 sm:py-4 border-t border-purple-100 flex-shrink-0 bg-purple-50/40 rounded-b-2xl",
+      "flex items-center justify-end gap-2 sm:gap-3 px-5 sm:px-6 py-3 sm:py-4 border-t border-purple-100 flex-shrink-0 bg-purple-50/40",
       className
     )}>
       {children}

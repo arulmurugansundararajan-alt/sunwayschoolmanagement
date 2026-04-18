@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import StaffModel from "@/models/Staff";
 import User from "@/models/User";
-import bcrypt from "bcryptjs";
 
 // GET /api/staff — list with search, department filter, pagination
 export async function GET(req: NextRequest) {
@@ -62,6 +61,16 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/staff — create new staff member + optional login account
+function generateSchoolEmail(name: string, suffix = 0): string {
+  const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return suffix === 0 ? `${base}@sunwayschooledu.in` : `${base}${suffix}@sunwayschooledu.in`;
+}
+
+function generatePassword(): string {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#";
+  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -96,22 +105,27 @@ export async function POST(req: NextRequest) {
 
     // Optionally create a User login account
     let userId: string | undefined;
+    let loginEmail: string | undefined;
+    let loginPassword: string | undefined;
     if (createLoginAccount) {
-      const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
-      if (!existingUser) {
-        const defaultPassword = `${name.split(" ")[0].toLowerCase()}@${year}`;
-        const salt = await bcrypt.genSalt(12);
-        const hashed = await bcrypt.hash(defaultPassword, salt);
-        const user = await User.create({
-          name,
-          email: email.toLowerCase().trim(),
-          password: hashed,
-          role: "staff",
-          phone,
-          isActive: true,
-        });
-        userId = user._id.toString();
+      // Generate unique school email from name
+      let candidate = generateSchoolEmail(name);
+      let suffix = 1;
+      while (await User.findOne({ email: candidate })) {
+        candidate = generateSchoolEmail(name, suffix++);
       }
+      loginEmail = candidate;
+      loginPassword = generatePassword();
+      // Pass plain password — User model's pre-save hook will hash it
+      const user = await User.create({
+        name,
+        email: loginEmail,
+        password: loginPassword,
+        role: "staff",
+        phone,
+        isActive: true,
+      });
+      userId = user._id.toString();
     }
 
     const staff = await StaffModel.create({
@@ -134,7 +148,7 @@ export async function POST(req: NextRequest) {
       isActive: true,
     });
 
-    return NextResponse.json({ success: true, data: staff, staffId }, { status: 201 });
+    return NextResponse.json({ success: true, data: staff, staffId, loginEmail, loginPassword }, { status: 201 });
   } catch (error) {
     console.error("POST /api/staff error:", error);
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });

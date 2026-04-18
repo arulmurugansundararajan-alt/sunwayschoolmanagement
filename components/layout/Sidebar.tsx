@@ -9,19 +9,20 @@ import {
   LayoutDashboard, Users, UserCheck, BookOpen, Calendar, DollarSign,
   BarChart3, MessageSquare, Bell, Settings, LogOut, GraduationCap,
   ClipboardList, FileText, Clock, PlusCircle, Home, Award, ChevronLeft,
-  ChevronRight, Shield, Book
+  ChevronRight, Shield, Book, Megaphone
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useNotifications } from "@/components/providers/NotificationContext";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Admissions", href: "/admin/admissions", icon: PlusCircle },
   { label: "Students", href: "/admin/students", icon: Users },
   { label: "Staff", href: "/admin/staff", icon: UserCheck },
-  { label: "Timetable", href: "/admin/timetable", icon: Clock },
   { label: "Fee Management", href: "/admin/fees", icon: DollarSign },
   { label: "Events & Calendar", href: "/admin/events", icon: Calendar },
+  { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
 ];
 
@@ -32,7 +33,7 @@ const staffNavItems = [
   { label: "Marks Entry", href: "/staff/marks", icon: Award },
   { label: "Assignments", href: "/staff/assignments", icon: Book },
   { label: "Calendar", href: "/staff/calendar", icon: Calendar },
-  { label: "Communication", href: "/staff/communication", icon: MessageSquare },
+  { label: "Announcements", href: "/staff/announcements", icon: Megaphone },
 ];
 
 const parentNavItems = [
@@ -43,7 +44,7 @@ const parentNavItems = [
   { label: "Report Card", href: "/parent/report-card", icon: FileText },
   { label: "Fee Payment", href: "/parent/fees", icon: DollarSign },
   { label: "Calendar", href: "/parent/calendar", icon: Calendar },
-  { label: "Messages", href: "/parent/messages", icon: MessageSquare },
+  { label: "Announcements", href: "/parent/announcements", icon: Megaphone },
 ];
 
 const roleConfig = {
@@ -80,6 +81,8 @@ export default function Sidebar({ role, hiddenNavItems = [] }: SidebarProps) {
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const config = roleConfig[role];
+  const { getUnreadCountByCategory } = useNotifications();
+  const homeworkBadge = role === "parent" ? getUnreadCountByCategory("homework") : 0;
   const navItems = hiddenNavItems.length
     ? config.items.filter((item) => !hiddenNavItems.includes(item.href))
     : config.items;
@@ -138,6 +141,7 @@ export default function Sidebar({ role, hiddenNavItems = [] }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
+          const badge = item.href === "/parent/homework" ? homeworkBadge : 0;
           return (
             <Link
               key={item.href}
@@ -151,9 +155,21 @@ export default function Sidebar({ role, hiddenNavItems = [] }: SidebarProps) {
               )}
               title={collapsed ? item.label : undefined}
             >
-              <item.icon className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
+              <div className="relative flex-shrink-0">
+                <item.icon className={cn(collapsed ? "w-5 h-5" : "w-4 h-4")} />
+                {badge > 0 && collapsed && (
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
+              </div>
               {!collapsed && <span>{item.label}</span>}
-              {isActive && !collapsed && (
+              {!collapsed && badge > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+                  {badge > 9 ? "9+" : badge}
+                </span>
+              )}
+              {isActive && !collapsed && badge === 0 && (
                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80" />
               )}
             </Link>

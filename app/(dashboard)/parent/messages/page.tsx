@@ -6,7 +6,25 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogCloseButton, DialogFooter } from "@/components/ui/dialog";
-import { Send, Bell, MessageSquare, CheckCheck, Loader2, Inbox } from "lucide-react";
+import { Send, Bell, MessageSquare, CheckCheck, Loader2, Inbox, Megaphone, Users } from "lucide-react";
+
+interface Announcement {
+  _id: string;
+  title: string;
+  content: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  targetAudience: "staff" | "parent" | "both";
+  createdByName: string;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+const priorityBadge: Record<string, "secondary" | "info" | "warning" | "destructive"> = {
+  low: "secondary", medium: "info", high: "warning", urgent: "destructive",
+};
+const priorityLabel: Record<string, string> = {
+  low: "Low", medium: "Medium", high: "High", urgent: "Urgent",
+};
 
 interface ChildData {
   _id: string;
@@ -36,6 +54,8 @@ interface NotificationItem {
 export default function ParentMessagesPage() {
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<ChildData[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [composeOpen, setComposeOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -61,6 +81,14 @@ export default function ParentMessagesPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    fetch("/api/announcements", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => { if (json.success) setAnnouncements(json.data); })
+      .catch(() => {})
+      .finally(() => setAnnouncementsLoading(false));
+  }, []);
+
   const handleCompose = () => {
     if (!body.trim()) return;
     setComposeSent(true);
@@ -82,6 +110,45 @@ export default function ParentMessagesPage() {
 
   return (
     <div className="space-y-5">
+      {/* Announcements Banner */}
+      <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2 text-purple-800">
+            <Megaphone className="w-4 h-4" /> School Announcements
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {announcementsLoading ? (
+            <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading announcements...
+            </div>
+          ) : announcements.length === 0 ? (
+            <p className="text-xs text-gray-400 py-2">No announcements at this time.</p>
+          ) : (
+            <div className="space-y-2">
+              {announcements.map((a) => (
+                <div key={a._id} className={`flex gap-3 p-3 rounded-xl bg-white border ${
+                  a.priority === "urgent" ? "border-red-200" :
+                  a.priority === "high" ? "border-amber-200" : "border-gray-100"
+                }`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-gray-900">{a.title}</p>
+                      <Badge variant={priorityBadge[a.priority]} className="text-xs">{priorityLabel[a.priority]}</Badge>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-0.5">{a.content}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {a.createdByName} • {new Date(a.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                      {a.expiresAt && <span className="text-amber-600 ml-2">Expires {new Date(a.expiresAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="flex gap-3">
         <Button variant="default" onClick={() => setComposeOpen(true)}>
           <Send className="w-4 h-4 mr-2" /> Message Teacher

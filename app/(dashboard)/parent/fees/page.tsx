@@ -214,8 +214,9 @@ export default function ParentFeesPage() {
               <CardContent>
                 <PieChartComponent
                   data={feeTypeData}
-                  height={200}
+                  height={220}
                   innerRadius={50}
+                  outerRadius={75}
                 />
               </CardContent>
             </Card>

@@ -65,13 +65,13 @@ export const staffService = {
     return json.data;
   },
 
-  async create(data: StaffFormData): Promise<{ data: Staff; staffId: string }> {
+  async create(data: StaffFormData): Promise<{ data: Staff; staffId: string; loginEmail?: string; loginPassword?: string }> {
     const res = await fetch("/api/staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return handleResponse<{ success: boolean; data: Staff; staffId: string }>(res);
+    return handleResponse<{ success: boolean; data: Staff; staffId: string; loginEmail?: string; loginPassword?: string }>(res);
   },
 
   async update(id: string, data: Partial<StaffFormData>): Promise<Staff> {

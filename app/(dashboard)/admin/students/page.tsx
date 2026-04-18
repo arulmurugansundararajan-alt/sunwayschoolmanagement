@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { studentService, StudentFormData, ParentAccountCredentials } from "@/lib/services/studentService";
+import { cn } from "@/lib/utils";
 import { Student } from "@/types";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { SCHOOL_GRADES, getSectionFromGrade } from "@/lib/constants";
@@ -24,7 +25,7 @@ import {
   KeyRound, Copy, Check, ShieldOff, RefreshCw,
 } from "lucide-react";
 
-// â”€â”€â”€ Validation schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Validation schema ────────────────────────────────────────────────────────
 const studentSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
@@ -43,7 +44,7 @@ const studentSchema = z.object({
 });
 type StudentFormValues = z.infer<typeof studentSchema>;
 
-// â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function StudentsPage() {
   // List state
   const [students, setStudents] = useState<Student[]>([]);
@@ -67,7 +68,9 @@ export default function StudentsPage() {
   // Form state
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [addSuccess, setAddSuccess] = useState<{ studentId: string; admissionNumber: string; name: string } | null>(null);
+  const [addSuccess, setAddSuccess] = useState<{ studentId: string; admissionNumber: string; name: string; parentLoginEmail?: string; parentLoginPassword?: string } | null>(null);
+  const [addStep, setAddStep] = useState(1);
+  const [editStep, setEditStep] = useState(1);
 
   // Parent account state
   const [parentAccountCredentials, setParentAccountCredentials] = useState<ParentAccountCredentials | null>(null);
@@ -77,7 +80,7 @@ export default function StudentsPage() {
   const [parentAccountError, setParentAccountError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<"email" | "password" | null>(null);
 
-  // â”€â”€ Fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -101,7 +104,7 @@ export default function StudentsPage() {
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
-  // â”€â”€ Forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Forms ──────────────────────────────────────────────────────────────────
   const addForm = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: { gender: "Male", admissionDate: new Date().toISOString().slice(0, 10) },
@@ -130,7 +133,7 @@ export default function StudentsPage() {
     }
   }, [editStudent, editForm]);
 
-  // â”€â”€ Submit handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Submit handlers ────────────────────────────────────────────────────────
   const toFormData = (values: StudentFormValues): StudentFormData => ({
     name: values.name,
     email: values.email || undefined,
@@ -153,7 +156,7 @@ export default function StudentsPage() {
     setFormError(null);
     try {
       const result = await studentService.create(toFormData(values));
-      setAddSuccess({ studentId: result.studentId, admissionNumber: result.admissionNumber, name: values.name });
+      setAddSuccess({ studentId: result.studentId, admissionNumber: result.admissionNumber, name: values.name, parentLoginEmail: result.parentLoginEmail, parentLoginPassword: result.parentLoginPassword });
       addForm.reset();
       await fetchStudents();
     } catch (err) {
@@ -193,13 +196,13 @@ export default function StudentsPage() {
     }
   };
 
-  // â”€â”€ Pagination page numbers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Pagination page numbers ────────────────────────────────────────────────
   const pageNums = Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
     const start = Math.max(1, Math.min(currentPage - 2, pagination.totalPages - 4));
     return start + i;
   });
 
-  // ── Parent account management handlers ────────────────────────────────
+  // -- Parent account management handlers --------------------------------
   const handleCreateParentAccount = async (s: Student) => {
     setParentAccountLoading(true);
     setParentAccountError(null);
@@ -260,7 +263,7 @@ export default function StudentsPage() {
               <Users className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-indigo-700">{loading ? "â€”" : stats.total}</p>
+              <p className="text-2xl font-bold text-indigo-700">{loading ? "—" : stats.total}</p>
               <p className="text-xs text-gray-600">Total Students</p>
             </div>
           </CardContent>
@@ -271,7 +274,7 @@ export default function StudentsPage() {
               <UserCheck className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-emerald-700">{loading ? "â€”" : stats.active}</p>
+              <p className="text-2xl font-bold text-emerald-700">{loading ? "—" : stats.active}</p>
               <p className="text-xs text-gray-600">Active Students</p>
             </div>
           </CardContent>
@@ -282,7 +285,7 @@ export default function StudentsPage() {
               <AlertTriangle className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-700">{loading ? "â€”" : stats.pendingFees}</p>
+              <p className="text-2xl font-bold text-amber-700">{loading ? "—" : stats.pendingFees}</p>
               <p className="text-xs text-gray-600">Pending Fees</p>
             </div>
           </CardContent>
@@ -380,7 +383,7 @@ export default function StudentsPage() {
                       <Avatar name={student.name} size="sm" colorIndex={parseInt(student._id.slice(-2), 16) % 8} />
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{student.name}</p>
-                        <p className="text-xs text-gray-500">Roll #{student.rollNumber ?? "â€”"}</p>
+                        <p className="text-xs text-gray-500">Roll #{student.rollNumber ?? "—"}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -410,7 +413,7 @@ export default function StudentsPage() {
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400">â€”</span>
+                      <span className="text-xs text-gray-400">—</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -422,7 +425,7 @@ export default function StudentsPage() {
                       }>
                         {student.fees[0].status}
                       </Badge>
-                    ) : <span className="text-xs text-gray-400">â€”</span>}
+                    ) : <span className="text-xs text-gray-400">—</span>}
                   </TableCell>
                   <TableCell>
                     <Badge variant={student.isActive ? "success" : "secondary"}>
@@ -496,7 +499,7 @@ export default function StudentsPage() {
         )}
       </Card>
 
-      {/* â”€â”€ View Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── View Modal ─────────────────────────────────────────────────────── */}
       {viewStudent && (
         <Dialog open onClose={() => setViewStudent(null)} maxWidth="xl">
           <DialogHeader>
@@ -509,7 +512,7 @@ export default function StudentsPage() {
                 <Avatar name={viewStudent.name} size="xl" />
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">{viewStudent.name}</h3>
-                  <p className="text-sm text-gray-600">{viewStudent.studentId} â€¢ {viewStudent.admissionNumber}</p>
+                  <p className="text-sm text-gray-600">{viewStudent.studentId} • {viewStudent.admissionNumber}</p>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="info">Class {viewStudent.className}</Badge>
                     <Badge variant={viewStudent.isActive ? "success" : "secondary"}>
@@ -524,10 +527,10 @@ export default function StudentsPage() {
                   <h4 className="text-sm font-semibold text-gray-700 mb-3">Personal Info</h4>
                   <div className="space-y-2 text-sm">
                     {[
-                      { label: "Date of Birth", value: viewStudent.dateOfBirth ? formatDate(viewStudent.dateOfBirth) : "â€”" },
+                      { label: "Date of Birth", value: viewStudent.dateOfBirth ? formatDate(viewStudent.dateOfBirth) : "—" },
                       { label: "Gender", value: viewStudent.gender },
-                      { label: "Blood Group", value: viewStudent.bloodGroup || "â€”" },
-                      { label: "Admission Date", value: viewStudent.admissionDate ? formatDate(viewStudent.admissionDate) : "â€”" },
+                      { label: "Blood Group", value: viewStudent.bloodGroup || "—" },
+                      { label: "Admission Date", value: viewStudent.admissionDate ? formatDate(viewStudent.admissionDate) : "—" },
                     ].map((item) => (
                       <div key={item.label} className="flex justify-between py-1.5 border-b border-gray-100 last:border-0">
                         <span className="text-gray-500">{item.label}</span>
@@ -542,7 +545,7 @@ export default function StudentsPage() {
                     {[
                       { label: "Parent Name", value: viewStudent.parentName },
                       { label: "Phone", value: viewStudent.parentPhone },
-                      { label: "Email", value: viewStudent.parentEmail || "â€”" },
+                      { label: "Email", value: viewStudent.parentEmail || "—" },
                     ].map((item) => (
                       <div key={item.label} className="flex justify-between py-1.5 border-b border-gray-100 last:border-0">
                         <span className="text-gray-500">{item.label}</span>
@@ -602,8 +605,8 @@ export default function StudentsPage() {
         </Dialog>
       )}
 
-      {/* â”€â”€ Add Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <Dialog open={showAddModal} onClose={() => !submitting && setShowAddModal(false)} maxWidth="lg">
+      {/* ── Add Modal ──────────────────────────────────────────────────────── */}
+      <Dialog open={showAddModal} onClose={() => { if (!submitting) { setShowAddModal(false); setAddStep(1); } }} maxWidth="lg">
         <DialogHeader>
           <DialogTitle>{addSuccess ? "Student Enrolled Successfully" : "Add New Student"}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setShowAddModal(false)} />
@@ -628,50 +631,97 @@ export default function StudentsPage() {
                   <p className="text-base font-mono font-bold text-indigo-600">{addSuccess.admissionNumber}</p>
                 </div>
               </div>
+              {addSuccess.parentLoginEmail && addSuccess.parentLoginPassword && (
+                <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-4 text-left space-y-2">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">⚠ Parent Login — Share with Parent</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-20 flex-shrink-0">Username</span>
+                    <code className="flex-1 text-xs font-mono bg-white border border-amber-200 rounded px-2 py-1 text-indigo-700 break-all">{addSuccess.parentLoginEmail}</code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-20 flex-shrink-0">Password</span>
+                    <code className="flex-1 text-xs font-mono bg-white border border-amber-200 rounded px-2 py-1 text-indigo-700">{addSuccess.parentLoginPassword}</code>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <StudentFormFields form={addForm} onSubmit={addForm.handleSubmit(handleAddSubmit)} submitting={submitting} formError={formError} />
+            <StudentFormFields form={addForm} onSubmit={addForm.handleSubmit(handleAddSubmit)} submitting={submitting} formError={formError} step={addStep} />
           )}
         </DialogContent>
         <DialogFooter>
           {addSuccess ? (
             <>
-              <Button variant="outline" onClick={() => { setAddSuccess(null); addForm.reset({ gender: "Male", admissionDate: new Date().toISOString().slice(0, 10) }); }}>
+              <Button variant="outline" onClick={() => { setAddSuccess(null); setAddStep(1); addForm.reset({ gender: "Male", admissionDate: new Date().toISOString().slice(0, 10) }); }}>
                 Add Another
               </Button>
-              <Button onClick={() => setShowAddModal(false)}>Done</Button>
+              <Button onClick={() => { setShowAddModal(false); setAddStep(1); }}>Done</Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setShowAddModal(false)} disabled={submitting}>Cancel</Button>
-              <Button onClick={addForm.handleSubmit(handleAddSubmit)} disabled={submitting} className="gap-2">
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Enroll Student
-              </Button>
+              {addStep > 1 ? (
+                <Button variant="outline" onClick={() => setAddStep((s) => s - 1)} disabled={submitting}>&larr; Back</Button>
+              ) : (
+                <Button variant="outline" onClick={() => { setShowAddModal(false); setAddStep(1); }} disabled={submitting}>Cancel</Button>
+              )}
+              {addStep < 3 ? (
+                <Button onClick={async () => {
+                  const stepFields: Record<number, (keyof StudentFormValues)[]> = {
+                    1: ["name", "dateOfBirth", "gender"],
+                    2: ["className"],
+                  };
+                  const valid = await addForm.trigger(stepFields[addStep]);
+                  if (valid) setAddStep((s) => s + 1);
+                }} disabled={submitting}>
+                  Next &rarr;
+                </Button>
+              ) : (
+                <Button onClick={addForm.handleSubmit(handleAddSubmit)} disabled={submitting} className="gap-2">
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Enroll Student
+                </Button>
+              )}
             </>
           )}
         </DialogFooter>
       </Dialog>
 
-      {/* â”€â”€ Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <Dialog open={!!editStudent} onClose={() => !submitting && setEditStudent(null)} maxWidth="lg">
+      {/* ── Edit Modal ─────────────────────────────────────────────────────── */}
+      <Dialog open={!!editStudent} onClose={() => { if (!submitting) { setEditStudent(null); setEditStep(1); } }} maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>Edit Student â€” {editStudent?.name}</DialogTitle>
+          <DialogTitle>Edit Student — {editStudent?.name}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setEditStudent(null)} />
         </DialogHeader>
         <DialogContent>
-          <StudentFormFields form={editForm} onSubmit={editForm.handleSubmit(handleEditSubmit)} submitting={submitting} formError={formError} />
+          <StudentFormFields form={editForm} onSubmit={editForm.handleSubmit(handleEditSubmit)} submitting={submitting} formError={formError} step={editStep} />
         </DialogContent>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setEditStudent(null)} disabled={submitting}>Cancel</Button>
-          <Button onClick={editForm.handleSubmit(handleEditSubmit)} disabled={submitting} className="gap-2">
-            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save Changes
-          </Button>
+          {editStep > 1 ? (
+            <Button variant="outline" onClick={() => setEditStep((s) => s - 1)} disabled={submitting}>&larr; Back</Button>
+          ) : (
+            <Button variant="outline" onClick={() => { setEditStudent(null); setEditStep(1); }} disabled={submitting}>Cancel</Button>
+          )}
+          {editStep < 3 ? (
+            <Button onClick={async () => {
+              const stepFields: Record<number, (keyof StudentFormValues)[]> = {
+                1: ["name", "dateOfBirth", "gender"],
+                2: ["className"],
+              };
+              const valid = await editForm.trigger(stepFields[editStep]);
+              if (valid) setEditStep((s) => s + 1);
+            }} disabled={submitting}>
+              Next &rarr;
+            </Button>
+          ) : (
+            <Button onClick={editForm.handleSubmit(handleEditSubmit)} disabled={submitting} className="gap-2">
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save Changes
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
-      {/* â”€â”€ Delete Confirm Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Delete Confirm Modal ───────────────────────────────────────────── */}
       <Dialog open={!!deleteTarget} onClose={() => !submitting && setDeleteTarget(null)} maxWidth="sm">
         <DialogHeader>
           <DialogTitle>Deactivate Student</DialogTitle>
@@ -700,7 +750,7 @@ export default function StudentsPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* ── Parent Account Credentials Modal ────────────────────────────── */}
+      {/* -- Parent Account Credentials Modal ------------------------------ */}
       <Dialog
         open={!!parentAccountAction}
         onClose={() => { if (!parentAccountLoading) { setParentAccountCredentials(null); setParentAccountAction(null); setParentAccountError(null); } }}
@@ -733,7 +783,7 @@ export default function StudentsPage() {
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
                 <p className="text-xs font-semibold text-amber-700">
-                  ⚠ This password will only be shown once. Please copy and share it with the parent.
+                  ? This password will only be shown once. Please copy and share it with the parent.
                 </p>
               </div>
 
@@ -766,7 +816,7 @@ export default function StudentsPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* ── Revoke Parent Access Confirm Modal ──────────────────────────── */}
+      {/* -- Revoke Parent Access Confirm Modal ---------------------------- */}
       <Dialog open={!!parentRevokeTarget} onClose={() => !parentAccountLoading && setParentRevokeTarget(null)} maxWidth="sm">
         <DialogHeader>
           <DialogTitle>Revoke Parent Login Access</DialogTitle>
@@ -804,16 +854,20 @@ export default function StudentsPage() {
   );
 }
 
-// â”€â”€â”€ Student Form Fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const FORM_STEPS = ["Personal Info", "Academic", "Parent / Guardian"];
+
 function StudentFormFields({
   form,
   submitting,
   formError,
+  step = 1,
 }: {
   form: ReturnType<typeof useForm<StudentFormValues>>;
   onSubmit: (e?: React.BaseSyntheticEvent) => void;
   submitting: boolean;
   formError: string | null;
+  step?: number;
 }) {
   const { register, formState: { errors }, watch, setValue } = form;
 
@@ -830,6 +884,33 @@ function StudentFormFields({
 
   return (
     <div className="space-y-5">
+      {/* Stepper */}
+      <div className="flex items-center gap-1">
+        {FORM_STEPS.map((label, i) => (
+          <>
+            <div key={label} className="flex items-center gap-1.5">
+              <div className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                step > i + 1 ? "bg-purple-600 text-white" :
+                step === i + 1 ? "bg-purple-600 text-white ring-4 ring-purple-100" :
+                "bg-gray-200 text-gray-500"
+              )}>
+                {step > i + 1 ? "✓" : i + 1}
+              </div>
+              <span className={cn(
+                "text-xs font-medium hidden sm:block",
+                step === i + 1 ? "text-gray-900" : step > i + 1 ? "text-purple-600" : "text-gray-400"
+              )}>
+                {label}
+              </span>
+            </div>
+            {i < FORM_STEPS.length - 1 && (
+              <div className={cn("flex-1 h-0.5 mx-1", step > i + 1 ? "bg-purple-400" : "bg-gray-200")} />
+            )}
+          </>
+        ))}
+      </div>
+
       {formError && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -837,124 +918,147 @@ function StudentFormFields({
         </div>
       )}
 
-      {/* Personal Info */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Personal Information
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Full Name *</label>
-            <Input {...register("name")} placeholder="e.g. Arjun Sharma" disabled={submitting} />
-            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+      {/* Step 1 - Personal Info */}
+      {step === 1 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Personal Information</span>
           </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-gray-600 block mb-1">Date of Birth *</label>
-            <DatePicker
-              value={dateOfBirth}
-              onChange={(e) => setValue("dateOfBirth", e.target.value, { shouldValidate: true })}
-              disabled={submitting}
-              minYear={currentYear - 20}
-              maxYear={currentYear - 3}
-            />
-            {errors.dateOfBirth && <p className="text-xs text-red-500 mt-1">{errors.dateOfBirth.message}</p>}
+          {/* Full Name */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Full Name *</label>
+            <div className="flex-1">
+              <Input {...register("name")} placeholder="e.g. Arjun Sharma" disabled={submitting} />
+              {errors.name && <p className="text-xs text-red-500 mt-0.5">{errors.name.message}</p>}
+            </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Gender *</label>
+          {/* Date of Birth */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Date of Birth *</label>
+            <div className="flex-1">
+              <DatePicker
+                value={dateOfBirth}
+                onChange={(e) => setValue("dateOfBirth", e.target.value, { shouldValidate: true })}
+                disabled={submitting}
+                minYear={currentYear - 20}
+                maxYear={currentYear - 3}
+              />
+              {errors.dateOfBirth && <p className="text-xs text-red-500 mt-0.5">{errors.dateOfBirth.message}</p>}
+            </div>
+          </div>
+          {/* Gender + Blood Group */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Gender *</label>
             <select {...register("gender")} disabled={submitting}
-              className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+              className="flex-1 h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Blood Group</label>
+            <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Blood Group</label>
             <select {...register("bloodGroup")} disabled={submitting}
-              className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+              className="flex-1 h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
               <option value="">Select</option>
               {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Phone</label>
-            <Input {...register("phone")} placeholder="Student phone" disabled={submitting} />
+          {/* Phone */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Phone</label>
+            <Input {...register("phone")} placeholder="Student phone" disabled={submitting} className="flex-1" />
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Email</label>
-            <Input {...register("email")} type="email" placeholder="student@email.com" disabled={submitting} />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+          {/* Email */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Email</label>
+            <div className="flex-1">
+              <Input {...register("email")} type="email" placeholder="student@email.com" disabled={submitting} />
+              {errors.email && <p className="text-xs text-red-500 mt-0.5">{errors.email.message}</p>}
+            </div>
           </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-gray-600 block mb-1">Address</label>
-            <Input {...register("address")} placeholder="Residential address" disabled={submitting} />
+          {/* Address */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Address</label>
+            <Input {...register("address")} placeholder="Residential address" disabled={submitting} className="flex-1" />
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Academic Info */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Academic Information
+      {/* Step 2 - Academic Info */}
+      {step === 2 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Academic Information</span>
+          </div>
+          {/* Grade */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Grade / Class *</label>
+            <div className="flex-1">
+              <select
+                {...register("className")}
+                disabled={submitting}
+                className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">Select grade</option>
+                {SCHOOL_GRADES.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+              {errors.className && <p className="text-xs text-red-500 mt-0.5">{errors.className.message}</p>}
+            </div>
+          </div>
+          {/* Roll Number */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Roll No.</label>
+            <Input {...register("rollNumber")} type="number" min={1} placeholder="e.g. 12" disabled={submitting} className="flex-1" />
+          </div>
+          {/* Admission Date */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Admission Date</label>
+            <div className="flex-1">
+              <DatePicker
+                value={admissionDate}
+                onChange={(e) => setValue("admissionDate", e.target.value)}
+                disabled={submitting}
+                minYear={2010}
+                maxYear={currentYear}
+              />
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Grade / Class *</label>
-            <select
-              {...register("className")}
-              disabled={submitting}
-              className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="">Select grade</option>
-              {SCHOOL_GRADES.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-            {errors.className && <p className="text-xs text-red-500 mt-1">{errors.className.message}</p>}
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Roll Number</label>
-            <Input {...register("rollNumber")} type="number" min={1} placeholder="e.g. 12" disabled={submitting} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-gray-600 block mb-1">Admission Date</label>
-            <DatePicker
-              value={admissionDate}
-              onChange={(e) => setValue("admissionDate", e.target.value)}
-              disabled={submitting}
-              minYear={2010}
-              maxYear={currentYear}
-            />
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* Parent Info */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Parent / Guardian
+      {/* Step 3 - Parent / Guardian */}
+      {step === 3 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Parent / Guardian</span>
+          </div>
+          {/* Parent Name + Phone */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Parent Name *</label>
+            <div className="flex-1">
+              <Input {...register("parentName")} placeholder="e.g. Rajesh Sharma" disabled={submitting} />
+              {errors.parentName && <p className="text-xs text-red-500 mt-0.5">{errors.parentName.message}</p>}
+            </div>
+            <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Phone *</label>
+            <div className="flex-1">
+              <Input {...register("parentPhone")} placeholder="+91 9876543210" disabled={submitting} />
+              {errors.parentPhone && <p className="text-xs text-red-500 mt-0.5">{errors.parentPhone.message}</p>}
+            </div>
+          </div>
+          {/* Parent Email */}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Parent Email</label>
+            <div className="flex-1">
+              <Input {...register("parentEmail")} type="email" placeholder="parent@email.com" disabled={submitting} />
+              {errors.parentEmail && <p className="text-xs text-red-500 mt-0.5">{errors.parentEmail.message}</p>}
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Parent Name *</label>
-            <Input {...register("parentName")} placeholder="e.g. Rajesh Sharma" disabled={submitting} />
-            {errors.parentName && <p className="text-xs text-red-500 mt-1">{errors.parentName.message}</p>}
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Parent Phone *</label>
-            <Input {...register("parentPhone")} placeholder="+91 9876543210" disabled={submitting} />
-            {errors.parentPhone && <p className="text-xs text-red-500 mt-1">{errors.parentPhone.message}</p>}
-          </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-gray-600 block mb-1">Parent Email</label>
-            <Input {...register("parentEmail")} type="email" placeholder="parent@email.com" disabled={submitting} />
-            {errors.parentEmail && <p className="text-xs text-red-500 mt-1">{errors.parentEmail.message}</p>}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

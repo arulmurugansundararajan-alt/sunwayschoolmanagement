@@ -69,13 +69,15 @@ export default function PieChartComponent({
   outerRadius = 100,
   label = true,
 }: PieChartComponentProps) {
+  // When a legend is shown, shift the pie center up so the legend fits without clipping
+  const cy = showLegend ? "42%" : "50%";
   return (
     <ResponsiveContainer width="100%" height={height}>
       <PieChart>
         <Pie
           data={data}
           cx="50%"
-          cy="50%"
+          cy={cy}
           labelLine={false}
           label={label ? renderCustomizedLabel : undefined}
           outerRadius={outerRadius}
@@ -98,7 +100,7 @@ export default function PieChartComponent({
           <Legend
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
+            wrapperStyle={{ fontSize: "12px", paddingTop: "4px" }}
           />
         )}
       </PieChart>

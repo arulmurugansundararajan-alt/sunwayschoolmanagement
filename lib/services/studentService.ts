@@ -66,13 +66,13 @@ export const studentService = {
     return json.data;
   },
 
-  async create(data: StudentFormData): Promise<{ data: Student; studentId: string; admissionNumber: string }> {
+  async create(data: StudentFormData): Promise<{ data: Student; studentId: string; admissionNumber: string; parentLoginEmail?: string; parentLoginPassword?: string }> {
     const res = await fetch("/api/students", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return handleResponse<{ success: boolean; data: Student; studentId: string; admissionNumber: string }>(res);
+    return handleResponse<{ success: boolean; data: Student; studentId: string; admissionNumber: string; parentLoginEmail?: string; parentLoginPassword?: string }>(res);
   },
 
   async update(id: string, data: Partial<StudentFormData>): Promise<Student> {

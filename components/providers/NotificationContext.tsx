@@ -10,6 +10,8 @@ interface NotificationContextValue {
   addNotification: (n: Omit<Notification, "_id" | "createdAt" | "isRead">) => void;
   markAllRead: () => void;
   markRead: (id: string) => void;
+  markCategoryRead: (category: string) => void;
+  getUnreadCountByCategory: (category: string) => number;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -40,11 +42,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   }, []);
 
+  const markCategoryRead = useCallback((category: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.category === category ? { ...n, isRead: true } : n))
+    );
+  }, []);
+
+  const getUnreadCountByCategory = useCallback(
+    (category: string) =>
+      notifications.filter((n) => n.category === category && !n.isRead).length,
+    [notifications]
+  );
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, addNotification, markAllRead, markRead }}
+      value={{ notifications, unreadCount, addNotification, markAllRead, markRead, markCategoryRead, getUnreadCountByCategory }}
     >
       {children}
     </NotificationContext.Provider>

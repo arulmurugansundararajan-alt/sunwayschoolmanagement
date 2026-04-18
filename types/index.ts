@@ -183,6 +183,7 @@ export interface Notification {
   createdBy: string;
   createdAt: string;
   expiresAt?: string;
+  category?: string;
 }
 
 export interface Message {

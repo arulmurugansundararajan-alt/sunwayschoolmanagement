@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { staffService, StaffFormData, AccountCredentials } from "@/lib/services/staffService";
 import { Staff } from "@/types";
-import { formatDate, getSubjectColor } from "@/lib/utils";
+import { formatDate, getSubjectColor, cn } from "@/lib/utils";
 import { SCHOOL_GRADES } from "@/lib/constants";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -63,7 +63,9 @@ export default function StaffManagementPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [addSuccess, setAddSuccess] = useState<{ staffId: string; name: string } | null>(null);
+  const [addSuccess, setAddSuccess] = useState<{ staffId: string; name: string; loginEmail?: string; loginPassword?: string } | null>(null);
+  const [addStep, setAddStep] = useState(1);
+  const [editStep, setEditStep] = useState(1);
 
   // Account management
   const [accountCredentials, setAccountCredentials] = useState<AccountCredentials | null>(null);
@@ -146,7 +148,7 @@ export default function StaffManagementPage() {
     setFormError(null);
     try {
       const result = await staffService.create(parseFormData(values));
-      setAddSuccess({ staffId: result.staffId, name: values.name });
+      setAddSuccess({ staffId: result.staffId, name: values.name, loginEmail: result.loginEmail, loginPassword: result.loginPassword });
       addForm.reset();
       await fetchStaff();
     } catch (err) {
@@ -235,9 +237,24 @@ export default function StaffManagementPage() {
   };
 
   const copyToClipboard = (text: string, field: "email" | "password") => {
-    navigator.clipboard.writeText(text);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const fallbackCopy = (text: string) => {
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.style.position = "fixed";
+    el.style.opacity = "0";
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
   };
 
   return (
@@ -487,7 +504,7 @@ export default function StaffManagementPage() {
       )}
 
       {/* ── Add Modal ──────────────────────────────────────────────────────── */}
-      <Dialog open={showAddModal} onClose={() => !submitting && setShowAddModal(false)} maxWidth="lg">
+      <Dialog open={showAddModal} onClose={() => { if (!submitting) { setShowAddModal(false); setAddStep(1); } }} maxWidth="lg">
         <DialogHeader>
           <DialogTitle>{addSuccess ? "Staff Added Successfully" : "Add New Staff Member"}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setShowAddModal(false)} />
@@ -506,6 +523,19 @@ export default function StaffManagementPage() {
                 <p className="text-xs text-gray-500 mb-1">Staff ID</p>
                 <p className="text-xl font-mono font-bold text-indigo-600">{addSuccess.staffId}</p>
               </div>
+              {addSuccess.loginEmail && addSuccess.loginPassword && (
+                <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-4 text-left space-y-2">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">⚠ Login Credentials — Share with Staff</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-20 flex-shrink-0">Username</span>
+                    <code className="flex-1 text-xs font-mono bg-white border border-amber-200 rounded px-2 py-1 text-indigo-700 break-all">{addSuccess.loginEmail}</code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-20 flex-shrink-0">Password</span>
+                    <code className="flex-1 text-xs font-mono bg-white border border-amber-200 rounded px-2 py-1 text-indigo-700">{addSuccess.loginPassword}</code>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <StaffFormFields
@@ -514,31 +544,47 @@ export default function StaffManagementPage() {
               submitting={submitting}
               formError={formError}
               showLoginOption
+              step={addStep}
             />
           )}
         </DialogContent>
         <DialogFooter>
           {addSuccess ? (
             <>
-              <Button variant="outline" onClick={() => { setAddSuccess(null); addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male", teacherType: "class_teacher" }); }}>
+              <Button variant="outline" onClick={() => { setAddSuccess(null); setAddStep(1); addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male", teacherType: "class_teacher" }); }}>
                 Add Another
               </Button>
-              <Button onClick={() => setShowAddModal(false)}>Done</Button>
+              <Button onClick={() => { setShowAddModal(false); setAddStep(1); }}>Done</Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setShowAddModal(false)} disabled={submitting}>Cancel</Button>
-              <Button onClick={addForm.handleSubmit(handleAddSubmit)} disabled={submitting} className="gap-2">
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Add Staff Member
-              </Button>
+              {addStep > 1 ? (
+                <Button variant="outline" onClick={() => setAddStep((s) => s - 1)} disabled={submitting}>&larr; Back</Button>
+              ) : (
+                <Button variant="outline" onClick={() => { setShowAddModal(false); setAddStep(1); }} disabled={submitting}>Cancel</Button>
+              )}
+              {addStep < 3 ? (
+                <Button onClick={async () => {
+                  const stepFields: Record<number, (keyof StaffFormValues)[]> = {
+                    1: ["name", "email", "phone", "gender"],
+                    2: ["designation", "department", "dateOfJoining", "experience", "salary"],
+                  };
+                  const valid = await addForm.trigger(stepFields[addStep]);
+                  if (valid) setAddStep((s) => s + 1);
+                }} disabled={submitting}>Next &rarr;</Button>
+              ) : (
+                <Button onClick={addForm.handleSubmit(handleAddSubmit)} disabled={submitting} className="gap-2">
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Add Staff Member
+                </Button>
+              )}
             </>
           )}
         </DialogFooter>
       </Dialog>
 
       {/* ── Edit Modal ─────────────────────────────────────────────────────── */}
-      <Dialog open={!!editStaff} onClose={() => !submitting && setEditStaff(null)} maxWidth="lg">
+      <Dialog open={!!editStaff} onClose={() => { if (!submitting) { setEditStaff(null); setEditStep(1); } }} maxWidth="lg">
         <DialogHeader>
           <DialogTitle>Edit Staff — {editStaff?.name}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setEditStaff(null)} />
@@ -549,14 +595,30 @@ export default function StaffManagementPage() {
             onSubmit={editForm.handleSubmit(handleEditSubmit)}
             submitting={submitting}
             formError={formError}
+            step={editStep}
           />
         </DialogContent>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setEditStaff(null)} disabled={submitting}>Cancel</Button>
-          <Button onClick={editForm.handleSubmit(handleEditSubmit)} disabled={submitting} className="gap-2">
-            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save Changes
-          </Button>
+          {editStep > 1 ? (
+            <Button variant="outline" onClick={() => setEditStep((s) => s - 1)} disabled={submitting}>&larr; Back</Button>
+          ) : (
+            <Button variant="outline" onClick={() => { setEditStaff(null); setEditStep(1); }} disabled={submitting}>Cancel</Button>
+          )}
+          {editStep < 3 ? (
+            <Button onClick={async () => {
+              const stepFields: Record<number, (keyof StaffFormValues)[]> = {
+                1: ["name", "email", "phone", "gender"],
+                2: ["designation", "department", "dateOfJoining", "experience", "salary"],
+              };
+              const valid = await editForm.trigger(stepFields[editStep]);
+              if (valid) setEditStep((s) => s + 1);
+            }} disabled={submitting}>Next &rarr;</Button>
+          ) : (
+            <Button onClick={editForm.handleSubmit(handleEditSubmit)} disabled={submitting} className="gap-2">
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save Changes
+            </Button>
+          )}
         </DialogFooter>
       </Dialog>
 
@@ -706,18 +768,23 @@ export default function StaffManagementPage() {
   );
 }
 
+
 // ─── Shared Staff Form Fields ─────────────────────────────────────────────────
+const STAFF_STEPS = ["Personal Info", "Professional", "Teacher Type"];
+
 function StaffFormFields({
   form,
   submitting,
   formError,
   showLoginOption,
+  step = 1,
 }: {
   form: ReturnType<typeof useForm<StaffFormValues>>;
   onSubmit: (e?: React.BaseSyntheticEvent) => void;
   submitting: boolean;
   formError: string | null;
   showLoginOption?: boolean;
+  step?: number;
 }) {
   const { register, formState: { errors }, watch, setValue } = form;
 
@@ -737,6 +804,33 @@ function StaffFormFields({
 
   return (
     <div className="space-y-5">
+      {/* Stepper */}
+      <div className="flex items-center gap-1">
+        {STAFF_STEPS.map((label, i) => (
+          <>
+            <div key={label} className="flex items-center gap-1.5">
+              <div className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                step > i + 1 ? "bg-purple-600 text-white" :
+                step === i + 1 ? "bg-purple-600 text-white ring-4 ring-purple-100" :
+                "bg-gray-200 text-gray-500"
+              )}>
+                {step > i + 1 ? "✓" : i + 1}
+              </div>
+              <span className={cn(
+                "text-xs font-medium hidden sm:block",
+                step === i + 1 ? "text-gray-900" : step > i + 1 ? "text-purple-600" : "text-gray-400"
+              )}>
+                {label}
+              </span>
+            </div>
+            {i < STAFF_STEPS.length - 1 && (
+              <div className={cn("flex-1 h-0.5 mx-1", step > i + 1 ? "bg-purple-400" : "bg-gray-200")} />
+            )}
+          </>
+        ))}
+      </div>
+
       {formError && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -744,185 +838,163 @@ function StaffFormFields({
         </div>
       )}
 
-      {/* Personal Info */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Personal Information
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Full Name *</label>
-            <Input {...register("name")} placeholder="e.g. Dr. Priya Sharma" disabled={submitting} />
-            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+      {/* Step 1 - Personal Info */}
+      {step === 1 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Personal Information</span>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Email Address *</label>
-            <Input {...register("email")} type="email" placeholder="staff@school.edu" disabled={submitting} />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Full Name *</label>
+            <div className="flex-1">
+              <Input {...register("name")} placeholder="e.g. Dr. Priya Sharma" disabled={submitting} />
+              {errors.name && <p className="text-xs text-red-500 mt-0.5">{errors.name.message}</p>}
+            </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Phone Number *</label>
-            <Input {...register("phone")} placeholder="+91 9876543210" disabled={submitting} />
-            {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>}
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Email *</label>
+            <div className="flex-1">
+              <Input {...register("email")} type="email" placeholder="staff@school.edu" disabled={submitting} />
+              {errors.email && <p className="text-xs text-red-500 mt-0.5">{errors.email.message}</p>}
+            </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Gender *</label>
-            <select
-              {...register("gender")}
-              disabled={submitting}
-              className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Phone *</label>
+            <div className="flex-1">
+              <Input {...register("phone")} placeholder="+91 9876543210" disabled={submitting} />
+              {errors.phone && <p className="text-xs text-red-500 mt-0.5">{errors.phone.message}</p>}
+            </div>
+            <label className="text-xs font-medium text-gray-500 w-20 flex-shrink-0 text-right">Gender *</label>
+            <select {...register("gender")} disabled={submitting}
+              className="flex-1 h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Professional Info */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Professional Details
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Designation *</label>
-            <Input {...register("designation")} placeholder="e.g. Senior Teacher" disabled={submitting} />
-            {errors.designation && <p className="text-xs text-red-500 mt-1">{errors.designation.message}</p>}
+      {/* Step 2 - Professional Details */}
+      {step === 2 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Professional Details</span>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Department *</label>
-            <Input {...register("department")} placeholder="e.g. Mathematics" disabled={submitting} />
-            {errors.department && <p className="text-xs text-red-500 mt-1">{errors.department.message}</p>}
-          </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-gray-600 block mb-1">Date of Joining *</label>
-            <DatePicker
-              value={dateOfJoining}
-              onChange={(e) => setValue("dateOfJoining", e.target.value, { shouldValidate: true })}
-              disabled={submitting}
-              minYear={1990}
-              maxYear={currentYear}
-            />
-            {errors.dateOfJoining && <p className="text-xs text-red-500 mt-1">{errors.dateOfJoining.message}</p>}
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Experience (years) *</label>
-            <Input {...register("experience")} type="number" min={0} placeholder="0" disabled={submitting} />
-            {errors.experience && <p className="text-xs text-red-500 mt-1">{errors.experience.message}</p>}
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Monthly Salary (₹) *</label>
-            <Input {...register("salary")} type="number" min={0} placeholder="0" disabled={submitting} />
-            {errors.salary && <p className="text-xs text-red-500 mt-1">{errors.salary.message}</p>}
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Qualifications</label>
-            <Input {...register("qualifications")} placeholder="e.g. M.Sc Mathematics, B.Ed" disabled={submitting} />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">Subjects (comma-separated)</label>
-            <Input {...register("subjectsRaw")} placeholder="e.g. Mathematics, Physics" disabled={submitting} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-gray-600 block mb-1">Address</label>
-            <Input {...register("address")} placeholder="Residential address" disabled={submitting} />
-          </div>
-        </div>
-      </div>
-
-      {/* Teacher Type */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Teacher Type
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label
-            className={`flex items-start gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${
-              teacherType === "class_teacher"
-                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                : "border-gray-200 text-gray-600 hover:border-emerald-200"
-            }`}
-          >
-            <input
-              type="radio"
-              value="class_teacher"
-              {...register("teacherType")}
-              disabled={submitting}
-              className="mt-0.5 accent-emerald-600"
-            />
-            <div>
-              <p className="text-sm font-semibold">Class Teacher</p>
-              <p className="text-xs text-gray-500 mt-0.5">Owns a class, can mark attendance</p>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Designation *</label>
+            <div className="flex-1">
+              <Input {...register("designation")} placeholder="e.g. Senior Teacher" disabled={submitting} />
+              {errors.designation && <p className="text-xs text-red-500 mt-0.5">{errors.designation.message}</p>}
             </div>
-          </label>
-          <label
-            className={`flex items-start gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${
-              teacherType === "subject_teacher"
-                ? "bg-blue-50 border-blue-300 text-blue-800"
-                : "border-gray-200 text-gray-600 hover:border-blue-200"
-            }`}
-          >
-            <input
-              type="radio"
-              value="subject_teacher"
-              {...register("teacherType")}
-              disabled={submitting}
-              className="mt-0.5 accent-blue-600"
-            />
-            <div>
-              <p className="text-sm font-semibold">Subject Teacher</p>
-              <p className="text-xs text-gray-500 mt-0.5">Teaches subjects across classes, no attendance access</p>
+            <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Department *</label>
+            <div className="flex-1">
+              <Input {...register("department")} placeholder="e.g. Mathematics" disabled={submitting} />
+              {errors.department && <p className="text-xs text-red-500 mt-0.5">{errors.department.message}</p>}
             </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Homeroom Class (Attendance Only) */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 bg-white rounded-full" />
-          Homeroom Class (Attendance Only)
-        </div>
-        {teacherType === "subject_teacher" ? (
-          <p className="text-sm text-gray-500 italic bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-            Subject teachers are not assigned to a specific class.
-          </p>
-        ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {SCHOOL_GRADES.map((grade) => (
-            <label
-              key={grade}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer text-sm transition-colors ${
-                selectedClasses.includes(grade)
-                  ? "bg-purple-50 border-purple-300 text-purple-700"
-                  : "border-gray-200 text-gray-600 hover:border-purple-200"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={selectedClasses.includes(grade)}
-                onChange={() => toggleClass(grade)}
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Date of Joining *</label>
+            <div className="flex-1">
+              <DatePicker
+                value={dateOfJoining}
+                onChange={(e) => setValue("dateOfJoining", e.target.value, { shouldValidate: true })}
                 disabled={submitting}
-                className="w-3.5 h-3.5 accent-purple-600"
+                minYear={1990}
+                maxYear={currentYear}
               />
-              {grade}
-            </label>
-          ))}
+              {errors.dateOfJoining && <p className="text-xs text-red-500 mt-0.5">{errors.dateOfJoining.message}</p>}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Experience (yrs) *</label>
+            <div className="flex-1">
+              <Input {...register("experience")} type="number" min={0} placeholder="0" disabled={submitting} />
+              {errors.experience && <p className="text-xs text-red-500 mt-0.5">{errors.experience.message}</p>}
+            </div>
+            <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Salary (₹) *</label>
+            <div className="flex-1">
+              <Input {...register("salary")} type="number" min={0} placeholder="0" disabled={submitting} />
+              {errors.salary && <p className="text-xs text-red-500 mt-0.5">{errors.salary.message}</p>}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Qualifications</label>
+            <Input {...register("qualifications")} placeholder="e.g. M.Sc Mathematics, B.Ed" disabled={submitting} className="flex-1" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Subjects</label>
+            <Input {...register("subjectsRaw")} placeholder="e.g. Mathematics, Physics" disabled={submitting} className="flex-1" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Address</label>
+            <Input {...register("address")} placeholder="Residential address" disabled={submitting} className="flex-1" />
+          </div>
         </div>
-        )}
-      </div>
+      )}
 
-      {showLoginOption && (
-        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none p-3 bg-purple-50 rounded-xl border border-purple-100">
-          <input type="checkbox" {...register("createLoginAccount")} className="w-4 h-4 accent-purple-600" />
-          Create login account for this staff member
-          <span className="text-xs text-gray-400">(default password: firstname@year)</span>
-        </label>
+      {/* Step 3 - Teacher Type & Classes */}
+      {step === 3 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Teacher Type</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className={cn(
+              "flex items-start gap-3 px-4 py-3 border cursor-pointer transition-colors",
+              teacherType === "class_teacher" ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "border-gray-200 text-gray-600 hover:border-emerald-200"
+            )}>
+              <input type="radio" value="class_teacher" {...register("teacherType")} disabled={submitting} className="mt-0.5 accent-emerald-600" />
+              <div>
+                <p className="text-sm font-semibold">Class Teacher</p>
+                <p className="text-xs text-gray-500 mt-0.5">Owns a class, can mark attendance</p>
+              </div>
+            </label>
+            <label className={cn(
+              "flex items-start gap-3 px-4 py-3 border cursor-pointer transition-colors",
+              teacherType === "subject_teacher" ? "bg-blue-50 border-blue-300 text-blue-800" : "border-gray-200 text-gray-600 hover:border-blue-200"
+            )}>
+              <input type="radio" value="subject_teacher" {...register("teacherType")} disabled={submitting} className="mt-0.5 accent-blue-600" />
+              <div>
+                <p className="text-sm font-semibold">Subject Teacher</p>
+                <p className="text-xs text-gray-500 mt-0.5">Teaches subjects across classes</p>
+              </div>
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+            <span className="w-2 h-2 bg-purple-600 rounded-full" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Homeroom Class (Attendance Only)</span>
+          </div>
+          {teacherType === "subject_teacher" ? (
+            <p className="text-sm text-gray-500 italic bg-blue-50 border border-blue-100 px-4 py-3">
+              Subject teachers are not assigned to a specific class.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {SCHOOL_GRADES.map((grade) => (
+                <label key={grade} className={cn(
+                  "flex items-center gap-2 px-3 py-2 border cursor-pointer text-sm transition-colors",
+                  selectedClasses.includes(grade) ? "bg-purple-50 border-purple-300 text-purple-700" : "border-gray-200 text-gray-600 hover:border-purple-200"
+                )}>
+                  <input type="checkbox" checked={selectedClasses.includes(grade)} onChange={() => toggleClass(grade)} disabled={submitting} className="w-3.5 h-3.5 accent-purple-600" />
+                  {grade}
+                </label>
+              ))}
+            </div>
+          )}
+
+          {showLoginOption && (
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none p-3 bg-purple-50 border border-purple-100">
+              <input type="checkbox" {...register("createLoginAccount")} className="w-4 h-4 accent-purple-600" />
+              Create login account for this staff member
+              <span className="text-xs text-gray-400">(default password: firstname@year)</span>
+            </label>
+          )}
+        </div>
       )}
     </div>
   );

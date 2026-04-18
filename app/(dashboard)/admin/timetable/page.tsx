@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,7 +113,7 @@ export default function TimetablePage() {
             </thead>
             <tbody>
               {PERIODS.map((period, idx) => (
-                <>
+                <React.Fragment key={idx}>
                   {period === 4 && (
                     <tr key="break1">
                       <td colSpan={6} className="py-1.5 px-3 bg-amber-50 border-y border-amber-200 text-center text-xs font-semibold text-amber-700">
@@ -157,7 +157,7 @@ export default function TimetablePage() {
                       );
                     })}
                   </tr>
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

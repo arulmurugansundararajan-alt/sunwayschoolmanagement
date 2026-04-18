@@ -7,7 +7,25 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogCloseButton, DialogFooter } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
-import { Send, Bell, MessageSquare, Users, CheckCheck, ChevronRight, Loader2 } from "lucide-react";
+import { Send, Bell, MessageSquare, Users, CheckCheck, ChevronRight, Loader2, Megaphone, BookOpen } from "lucide-react";
+
+interface Announcement {
+  _id: string;
+  title: string;
+  content: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  targetAudience: "staff" | "parent" | "both";
+  createdByName: string;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+const priorityBadge: Record<string, "secondary" | "info" | "warning" | "destructive"> = {
+  low: "secondary", medium: "info", high: "warning", urgent: "destructive",
+};
+const priorityLabel: Record<string, string> = {
+  low: "Low", medium: "Medium", high: "High", urgent: "Urgent",
+};
 
 interface StudentInfo {
   _id: string;
@@ -26,7 +44,9 @@ interface ClassInfo {
 }
 
 export default function StaffCommunicationPage() {
-  const [activeTab, setActiveTab] = useState<"inbox" | "notifications">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "notifications" | "announcements">("announcements");
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState("");
   const [subject, setSubject] = useState("");
@@ -58,6 +78,16 @@ export default function StaffCommunicationPage() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "announcements") return;
+    setAnnouncementsLoading(true);
+    fetch("/api/announcements", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => { if (json.success) setAnnouncements(json.data); })
+      .catch(() => {})
+      .finally(() => setAnnouncementsLoading(false));
+  }, [activeTab]);
 
   // Derive unique parents from students
   const parents = students
@@ -113,14 +143,15 @@ export default function StaffCommunicationPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 max-w-xs">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 max-w-sm">
         {[
+          { key: "announcements", label: "Announcements", icon: Megaphone, count: announcements.length },
           { key: "inbox", label: "Inbox", icon: MessageSquare, count: messages.length },
           { key: "notifications", label: "Alerts", icon: Bell, count: notifications.filter(n => !n.isRead).length },
         ].map(tab => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
+            onClick={() => setActiveTab(tab.key as "inbox" | "notifications" | "announcements")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === tab.key ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"
             }`}
@@ -135,6 +166,53 @@ export default function StaffCommunicationPage() {
           </button>
         ))}
       </div>
+
+      {/* ── Announcements tab ────────────────────────────────────── */}
+      {activeTab === "announcements" && (
+        <div className="space-y-3">
+          {announcementsLoading ? (
+            <div className="flex items-center justify-center h-32 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...
+            </div>
+          ) : announcements.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Megaphone className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm text-gray-400">No announcements for staff</p>
+              </CardContent>
+            </Card>
+          ) : (
+            announcements.map((a) => (
+              <Card key={a._id} className={`border-l-4 ${
+                a.priority === "urgent" ? "border-l-red-500" :
+                a.priority === "high" ? "border-l-amber-500" :
+                a.priority === "medium" ? "border-l-blue-500" : "border-l-gray-300"
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-semibold text-gray-900 text-sm">{a.title}</h4>
+                        <Badge variant={priorityBadge[a.priority]} className="text-xs">{priorityLabel[a.priority]}</Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{a.content}</p>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                        <span>By {a.createdByName}</span>
+                        <span>•</span>
+                        <span>{formatDate(a.createdAt)}</span>
+                        {a.expiresAt && <><span>•</span><span className="text-amber-600">Expires {formatDate(a.expiresAt)}</span></>}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Content */}
       {activeTab === "inbox" && (

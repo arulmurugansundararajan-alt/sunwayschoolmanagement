@@ -404,88 +404,82 @@ export default function AdminEventsPage() {
           <DialogCloseButton onClose={() => setFormOpen(false)} />
         </DialogHeader>
         <DialogContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {error && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-red-700 text-xs font-medium">
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-2 text-red-700 text-xs font-medium">
                 <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {error}
               </div>
             )}
-
-            <div>
-              <label className="text-xs font-semibold text-gray-700 block mb-1">Event Title *</label>
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-1">
+              <span className="w-2 h-2 bg-purple-600 rounded-full" />
+              <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Event Details</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Event Title *</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="e.g. Annual Sports Day"
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
             </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-700 block mb-1">Description</label>
+            <div className="flex items-start gap-3">
+              <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right mt-2">Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
+                rows={2}
                 placeholder="Optional description..."
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Event Type *</label>
-                <select
-                  value={form.eventType}
-                  onChange={(e) => setForm({ ...form, eventType: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                >
-                  {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Visible To</label>
-                <select
-                  value={form.targetAudience}
-                  onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                >
-                  {AUDIENCES.map((a) => <option key={a} value={a}>{audienceLabel[a]}</option>)}
-                </select>
-              </div>
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Event Type *</label>
+              <select
+                value={form.eventType}
+                onChange={(e) => setForm({ ...form, eventType: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <label className="text-xs font-medium text-gray-500 w-20 flex-shrink-0 text-right">Visible To</label>
+              <select
+                value={form.targetAudience}
+                onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                {AUDIENCES.map((a) => <option key={a} value={a}>{audienceLabel[a]}</option>)}
+              </select>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Start Date *</label>
-                <input
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value, endDate: form.endDate < e.target.value ? e.target.value : form.endDate })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">End Date *</label>
-                <input
-                  type="date"
-                  value={form.endDate}
-                  min={form.startDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Start Date *</label>
               <input
-                type="checkbox"
-                id="isFullDay"
-                checked={form.isFullDay}
-                onChange={(e) => setForm({ ...form, isFullDay: e.target.checked })}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                type="date"
+                value={form.startDate}
+                onChange={(e) => setForm({ ...form, startDate: e.target.value, endDate: form.endDate < e.target.value ? e.target.value : form.endDate })}
+                className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
-              <label htmlFor="isFullDay" className="text-xs font-medium text-gray-600">Full day event</label>
+              <label className="text-xs font-medium text-gray-500 w-20 flex-shrink-0 text-right">End Date *</label>
+              <input
+                type="date"
+                value={form.endDate}
+                min={form.startDate}
+                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-28 flex-shrink-0" />
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="isFullDay"
+                  checked={form.isFullDay}
+                  onChange={(e) => setForm({ ...form, isFullDay: e.target.checked })}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <span className="text-xs font-medium text-gray-600">Full day event</span>
+              </label>
             </div>
           </div>
         </DialogContent>

@@ -4,6 +4,18 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import StudentModel from "@/models/Student";
 import FeeModel from "@/models/Fee";
+import UserModel from "@/models/User";
+import bcrypt from "bcryptjs";
+
+function generateSchoolEmail(name: string, suffix = 0): string {
+  const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return suffix === 0 ? `${base}@sunwayschooledu.in` : `${base}${suffix}@sunwayschooledu.in`;
+}
+
+function generatePassword(): string {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#";
+  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
 
 // GET /api/students — list with search, class filter, pagination
 export async function GET(request: NextRequest) {
@@ -128,7 +140,36 @@ export async function POST(request: NextRequest) {
       isActive: true,
     });
 
-    return NextResponse.json({ success: true, data: student, studentId, admissionNumber }, { status: 201 });
+    // Auto-create parent login account
+    let parentLoginEmail: string | undefined;
+    let parentLoginPassword: string | undefined;
+    try {
+      let candidate = generateSchoolEmail(parentName);
+      let suffix = 1;
+      while (await UserModel.findOne({ email: candidate })) {
+        candidate = generateSchoolEmail(parentName, suffix++);
+      }
+      parentLoginEmail = candidate;
+      parentLoginPassword = generatePassword();
+      const salt = await bcrypt.genSalt(12);
+      const hashed = await bcrypt.hash(parentLoginPassword, salt);
+      const parentUser = await UserModel.create({
+        name: parentName.trim(),
+        email: parentLoginEmail,
+        password: hashed,
+        role: "parent",
+        phone: parentPhone.trim(),
+        isActive: true,
+      });
+      // Link parent to student
+      await StudentModel.findByIdAndUpdate(student._id, { parentId: parentUser._id });
+    } catch {
+      // Non-fatal: student was created, login creation failed silently
+      parentLoginEmail = undefined;
+      parentLoginPassword = undefined;
+    }
+
+    return NextResponse.json({ success: true, data: student, studentId, admissionNumber, parentLoginEmail, parentLoginPassword }, { status: 201 });
   } catch (error) {
     console.error("POST /api/students error:", error);
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });

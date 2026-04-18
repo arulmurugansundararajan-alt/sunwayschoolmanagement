@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useNotifications } from "@/components/providers/NotificationContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, getSubjectColor } from "@/lib/utils";
@@ -47,6 +48,7 @@ function daysLeftLabel(dueDate: string) {
 }
 
 export default function ParentHomeworkPage() {
+  const { markCategoryRead } = useNotifications();
   const [children, setChildren] = useState<ChildInfo[]>([]);
   const [selectedChild, setSelectedChild] = useState<ChildInfo | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -55,6 +57,9 @@ export default function ParentHomeworkPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterSubject, setFilterSubject] = useState("");
   const [showPast, setShowPast] = useState(false);
+
+  // Mark homework notifications as read when page opens
+  useEffect(() => { markCategoryRead("homework"); }, [markCategoryRead]);
 
   // Load children from parent/me
   useEffect(() => {

@@ -458,94 +458,103 @@ export default function FeeManagementPage() {
 
               {/* Student search */}
               <div className={showStudentDrop && studentResults.length > 0 ? "min-h-[220px]" : ""}>
-                <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full" /> Student
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+                  <span className="w-2 h-2 bg-purple-600 rounded-full" />
+                  <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Student</span>
                 </div>
-                <div className="relative">
-                  <Input
-                    placeholder="Search student by name or ID…"
-                    value={studentQuery}
-                    onChange={(e) => { setStudentQuery(e.target.value); addForm.setValue("studentId", ""); }}
-                    onFocus={() => studentResults.length > 0 && setShowStudentDrop(true)}
-                    onBlur={() => setTimeout(() => setShowStudentDrop(false), 200)}
-                    leftIcon={studentSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    disabled={submitting}
-                    autoComplete="off"
-                  />
-                  {showStudentDrop && studentResults.length > 0 && (
-                    <div className="absolute z-20 top-full mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                      {studentResults.map((s) => (
-                        <button type="button" key={s._id}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 text-left transition-colors"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            addForm.setValue("studentId", s._id, { shouldValidate: true });
-                            addForm.setValue("studentName", s.name);
-                            addForm.setValue("className", s.className);
-                            setStudentQuery(`${s.name}${s.studentId ? ` (${s.studentId})` : ""}`);
-                            setShowStudentDrop(false);
-                          }}>
-                          <span className="w-8 h-8 bg-purple-100 rounded-full inline-flex items-center justify-center text-sm font-bold text-purple-700 flex-shrink-0">
-                            {s.name.charAt(0).toUpperCase()}
-                          </span>
-                          <span>
-                            <span className="block text-sm font-medium text-gray-900">{s.name}</span>
-                            <span className="text-xs text-gray-500">{s.studentId && `${s.studentId} • `}{s.className}{s.section ? `-${s.section}` : ""}</span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Search Student *</label>
+                  <div className="flex-1 relative">
+                    <Input
+                      placeholder="Search by name or ID…"
+                      value={studentQuery}
+                      onChange={(e) => { setStudentQuery(e.target.value); addForm.setValue("studentId", ""); }}
+                      onFocus={() => studentResults.length > 0 && setShowStudentDrop(true)}
+                      onBlur={() => setTimeout(() => setShowStudentDrop(false), 200)}
+                      leftIcon={studentSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      disabled={submitting}
+                      autoComplete="off"
+                    />
+                    {showStudentDrop && studentResults.length > 0 && (
+                      <div className="absolute z-20 top-full mt-1 w-full bg-white border border-gray-200 shadow-lg max-h-64 overflow-y-auto">
+                        {studentResults.map((s) => (
+                          <button type="button" key={s._id}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 text-left transition-colors"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              addForm.setValue("studentId", s._id, { shouldValidate: true });
+                              addForm.setValue("studentName", s.name);
+                              addForm.setValue("className", s.className);
+                              setStudentQuery(`${s.name}${s.studentId ? ` (${s.studentId})` : ""}`);
+                              setShowStudentDrop(false);
+                            }}>
+                            <span className="w-8 h-8 bg-purple-100 inline-flex items-center justify-center text-sm font-bold text-purple-700 flex-shrink-0">
+                              {s.name.charAt(0).toUpperCase()}
+                            </span>
+                            <span>
+                              <span className="block text-sm font-medium text-gray-900">{s.name}</span>
+                              <span className="text-xs text-gray-500">{s.studentId && `${s.studentId} • `}{s.className}{s.section ? `-${s.section}` : ""}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {addForm.formState.errors.studentId && (
-                  <p className="text-xs text-red-500 mt-1">{addForm.formState.errors.studentId.message}</p>
+                  <p className="text-xs text-red-500 mt-1 ml-32 pl-3">{addForm.formState.errors.studentId.message}</p>
                 )}
               </div>
 
               {/* Fee details */}
               <div>
-                <div className="inline-flex items-center gap-1.5 bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full" /> Fee Details
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+                  <span className="w-2 h-2 bg-purple-600 rounded-full" />
+                  <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Fee Details</span>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 block mb-1">Fee Type *</label>
-                    <select {...addForm.register("feeType")} disabled={submitting}
-                      className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                      <option value="">Select type</option>
-                      {FEE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    {addForm.formState.errors.feeType && <p className="text-xs text-red-500 mt-1">{addForm.formState.errors.feeType.message}</p>}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Fee Type *</label>
+                    <div className="flex-1">
+                      <select {...addForm.register("feeType")} disabled={submitting}
+                        className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Select type</option>
+                        {FEE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      {addForm.formState.errors.feeType && <p className="text-xs text-red-500 mt-0.5">{addForm.formState.errors.feeType.message}</p>}
+                    </div>
+                    <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Amount (₹) *</label>
+                    <div className="flex-1">
+                      <Input {...addForm.register("amount")} type="number" min={1} placeholder="e.g. 5000" disabled={submitting} />
+                      {addForm.formState.errors.amount && <p className="text-xs text-red-500 mt-0.5">{addForm.formState.errors.amount.message}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 block mb-1">Amount (₹) *</label>
-                    <Input {...addForm.register("amount")} type="number" min={1} placeholder="e.g. 5000" disabled={submitting} />
-                    {addForm.formState.errors.amount && <p className="text-xs text-red-500 mt-1">{addForm.formState.errors.amount.message}</p>}
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Due Date *</label>
+                    <div className="flex-1">
+                      <DatePicker
+                        value={dueDateVal}
+                        onChange={(e) => addForm.setValue("dueDate", e.target.value, { shouldValidate: true })}
+                        disabled={submitting}
+                        minYear={thisYear - 1}
+                        maxYear={thisYear + 2}
+                      />
+                      {addForm.formState.errors.dueDate && <p className="text-xs text-red-500 mt-0.5">{addForm.formState.errors.dueDate.message}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 block mb-1">Due Date *</label>
-                    <DatePicker
-                      value={dueDateVal}
-                      onChange={(e) => addForm.setValue("dueDate", e.target.value, { shouldValidate: true })}
-                      disabled={submitting}
-                      minYear={thisYear - 1}
-                      maxYear={thisYear + 2}
-                    />
-                    {addForm.formState.errors.dueDate && <p className="text-xs text-red-500 mt-1">{addForm.formState.errors.dueDate.message}</p>}
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 block mb-1">Academic Year *</label>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Academic Year *</label>
                     <select {...addForm.register("academicYear")} disabled={submitting}
-                      className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      className="flex-1 h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
                       {[-1, 0, 1].map((offset) => {
                         const y = thisYear + offset;
                         return <option key={y} value={`${y}-${y + 1}`}>{y}–{y + 1}</option>;
                       })}
                     </select>
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="text-xs font-medium text-gray-600 block mb-1">Remarks</label>
-                    <Input {...addForm.register("remarks")} placeholder="Optional note" disabled={submitting} />
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-28 flex-shrink-0 text-right">Remarks</label>
+                    <Input {...addForm.register("remarks")} placeholder="Optional note" disabled={submitting} className="flex-1" />
                   </div>
                 </div>
               </div>
@@ -603,14 +612,14 @@ export default function FeeManagementPage() {
               </Badge>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {formError && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />{formError}
                 </div>
               )}
               {payTarget && (
-                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 space-y-1">
+                <div className="bg-purple-50 border border-purple-200 p-4 space-y-1">
                   <p className="text-sm font-bold text-purple-900">{payTarget.studentName}</p>
                   <p className="text-xs text-purple-600">{payTarget.feeType} • {payTarget.className} • {payTarget.academicYear}</p>
                   <div className="flex gap-5 mt-2 text-xs text-gray-700">
@@ -620,26 +629,21 @@ export default function FeeManagementPage() {
                   </div>
                 </div>
               )}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-gray-600 block mb-1">Amount Received (₹) *</label>
-                  <Input
-                    {...payForm.register("paidAmount")}
-                    type="number" min={1}
-                    max={payTarget ? payTarget.amount - payTarget.paidAmount : undefined}
-                    disabled={submitting}
-                  />
-                  {payForm.formState.errors.paidAmount && <p className="text-xs text-red-500 mt-1">{payForm.formState.errors.paidAmount.message}</p>}
+              <div className="flex items-center gap-3">
+                <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Amount (₹) *</label>
+                <div className="flex-1">
+                  <Input {...payForm.register("paidAmount")} type="number" min={1} max={payTarget ? payTarget.amount - payTarget.paidAmount : undefined} disabled={submitting} />
+                  {payForm.formState.errors.paidAmount && <p className="text-xs text-red-500 mt-0.5">{payForm.formState.errors.paidAmount.message}</p>}
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-1">Payment Method *</label>
-                  <select {...payForm.register("paymentMethod")} disabled={submitting}
-                    className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-1">Payment Date *</label>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Method *</label>
+                <select {...payForm.register("paymentMethod")} disabled={submitting}
+                  className="flex-1 h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Date *</label>
+                <div className="flex-1">
                   <DatePicker
                     value={payDateVal}
                     onChange={(e) => payForm.setValue("paidDate", e.target.value, { shouldValidate: true })}
@@ -647,12 +651,12 @@ export default function FeeManagementPage() {
                     minYear={thisYear - 1}
                     maxYear={thisYear}
                   />
-                  {payForm.formState.errors.paidDate && <p className="text-xs text-red-500 mt-1">{payForm.formState.errors.paidDate.message}</p>}
+                  {payForm.formState.errors.paidDate && <p className="text-xs text-red-500 mt-0.5">{payForm.formState.errors.paidDate.message}</p>}
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-gray-600 block mb-1">Remarks</label>
-                  <Input {...payForm.register("remarks")} placeholder="Optional note" disabled={submitting} />
-                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Remarks</label>
+                <Input {...payForm.register("remarks")} placeholder="Optional note" disabled={submitting} className="flex-1" />
               </div>
             </div>
           )}

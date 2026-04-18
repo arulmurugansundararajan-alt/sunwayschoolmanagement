@@ -9,11 +9,13 @@ import {
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter, DialogCloseButton
 } from "@/components/ui/dialog";
 import { mockStudents, mockClasses } from "@/lib/mock-data";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
 import {
   Search, Plus, UserPlus, GraduationCap, Calendar, CheckCircle
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+
+const ADMISSION_STEPS = ["Personal Info", "Academic & Parent", "Fee & Documents"];
 
 export default function AdmissionsPage() {
   const [search, setSearch] = useState("");
@@ -157,19 +159,31 @@ export default function AdmissionsPage() {
       {/* New Admission Modal */}
       <Dialog open={showModal} onClose={() => { setShowModal(false); setFormStep(1); }} maxWidth="2xl">
         <DialogHeader>
-          <div>
-            <DialogTitle>New Student Admission</DialogTitle>
-            <p className="text-xs text-gray-500 mt-0.5">Step {formStep} of 3</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {[1, 2, 3].map((step) => (
-              <div
-                key={step}
-                className={`w-8 h-1.5 rounded-full transition-colors ${formStep >= step ? "bg-indigo-600" : "bg-gray-200"}`}
-              />
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            {ADMISSION_STEPS.map((label, i) => (
+              <>
+                <div key={label} className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all",
+                    formStep > i + 1 ? "bg-purple-600 text-white" :
+                    formStep === i + 1 ? "bg-purple-600 text-white ring-4 ring-purple-100" :
+                    "bg-gray-200 text-gray-500"
+                  )}>
+                    {formStep > i + 1 ? "✓" : i + 1}
+                  </div>
+                  <span className={cn(
+                    "text-xs font-medium hidden sm:block",
+                    formStep === i + 1 ? "text-purple-700" :
+                    formStep > i + 1 ? "text-gray-500" : "text-gray-400"
+                  )}>{label}</span>
+                </div>
+                {i < ADMISSION_STEPS.length - 1 && (
+                  <div className={cn("flex-1 h-0.5 mx-1 min-w-[12px]", formStep > i + 1 ? "bg-purple-400" : "bg-gray-200")} />
+                )}
+              </>
             ))}
-            <DialogCloseButton onClose={() => { setShowModal(false); setFormStep(1); }} />
           </div>
+          <DialogCloseButton onClose={() => { setShowModal(false); setFormStep(1); }} />
         </DialogHeader>
 
         <DialogContent>
@@ -182,35 +196,44 @@ export default function AdmissionsPage() {
               <p className="text-gray-500 text-sm">Student has been enrolled. ID: PA2024{String(Math.floor(Math.random() * 1000)).padStart(4, "0")}</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {formStep === 1 && (
                 <>
-                  <h3 className="font-semibold text-gray-700 text-sm">Student Personal Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Full Name *" placeholder="Student's full name" />
-                    <Input label="Date of Birth *" type="date" />
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender *</label>
-                      <select className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Blood Group</label>
-                      <select className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-                        <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
-                      </select>
-                    </div>
-                    <Input label="Phone Number" placeholder="Student's phone" />
-                    <Input label="Email" type="email" placeholder="student@email.com" />
+                  <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                    <span className="w-2 h-2 bg-purple-600 rounded-full" />
+                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Student Personal Information</span>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Full Name *</label>
+                    <Input placeholder="Student's full name" className="flex-1" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Date of Birth *</label>
+                    <Input type="date" className="flex-1" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Gender *</label>
+                    <select className="flex-1 h-10 px-3 border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <option>Male</option>
+                      <option>Female</option>
+                      <option>Other</option>
+                    </select>
+                    <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Blood Group</label>
+                    <select className="flex-1 h-10 px-3 border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                      <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Phone</label>
+                    <Input placeholder="Student's phone" className="flex-1" />
+                    <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Email</label>
+                    <Input type="email" placeholder="student@email.com" className="flex-1" />
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right mt-2">Address</label>
                     <textarea
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"
+                      className="flex-1 px-3 py-2 border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 h-16 resize-none"
                       placeholder="Full residential address"
                     />
                   </div>
@@ -219,45 +242,62 @@ export default function AdmissionsPage() {
 
               {formStep === 2 && (
                 <>
-                  <h3 className="font-semibold text-gray-700 text-sm">Academic & Parent Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Class *</label>
-                      <select className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        {mockClasses.map(c => <option key={c._id} value={c._id}>Class {c.name}{c.section}</option>)}
-                      </select>
-                    </div>
-                    <Input label="Admission Date *" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
-                    <Input label="Parent/Guardian Name *" placeholder="Parent full name" />
-                    <Input label="Parent Phone *" placeholder="Parent phone number" />
-                    <Input label="Parent Email" type="email" placeholder="parent@email.com" />
-                    <Input label="Relation" placeholder="Father / Mother / Guardian" />
+                  <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                    <span className="w-2 h-2 bg-purple-600 rounded-full" />
+                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Academic &amp; Parent Information</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Class *</label>
+                    <select className="flex-1 h-10 px-3 border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      {mockClasses.map(c => <option key={c._id} value={c._id}>Class {c.name}{c.section}</option>)}
+                    </select>
+                    <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Admission Date *</label>
+                    <Input type="date" defaultValue={new Date().toISOString().split("T")[0]} className="flex-1" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Parent Name *</label>
+                    <Input placeholder="Parent's full name" className="flex-1" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Parent Phone *</label>
+                    <Input placeholder="Parent phone number" className="flex-1" />
+                    <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Relation</label>
+                    <Input placeholder="Father / Mother / Guardian" className="flex-1" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Parent Email</label>
+                    <Input type="email" placeholder="parent@email.com" className="flex-1" />
                   </div>
                 </>
               )}
 
               {formStep === 3 && (
                 <>
-                  <h3 className="font-semibold text-gray-700 text-sm">Fee & Documents</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Fee Category</label>
-                      <select className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option>General</option>
-                        <option>Scholarship 25%</option>
-                        <option>Scholarship 50%</option>
-                        <option>Staff Ward</option>
-                      </select>
-                    </div>
-                    <Input label="Admission Fee" type="number" defaultValue="2000" />
+                  <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                    <span className="w-2 h-2 bg-purple-600 rounded-full" />
+                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Fee &amp; Documents</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {["Birth Certificate", "Transfer Certificate", "Aadhaar Card", "Photo (2 copies)", "Previous Mark Sheet", "Caste Certificate"].map((doc) => (
-                      <label key={doc} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                        <input type="checkbox" className="rounded" />
-                        <span className="text-sm text-gray-700">{doc}</span>
-                      </label>
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Fee Category</label>
+                    <select className="flex-1 h-10 px-3 border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <option>General</option>
+                      <option>Scholarship 25%</option>
+                      <option>Scholarship 50%</option>
+                      <option>Staff Ward</option>
+                    </select>
+                    <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Admission Fee</label>
+                    <Input type="number" defaultValue="2000" className="flex-1" />
+                  </div>
+                  <div className="mt-1">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Documents Checklist</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["Birth Certificate", "Transfer Certificate", "Aadhaar Card", "Photo (2 copies)", "Previous Mark Sheet", "Caste Certificate"].map((doc) => (
+                        <label key={doc} className="flex items-center gap-2 p-2 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                          <input type="checkbox" className="rounded" />
+                          <span className="text-xs text-gray-700">{doc}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </>
               )}
