@@ -83,7 +83,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       name, email, phone, designation, department,
-      subjects, classes, qualifications, experience,
+      subjects, classes, classTeacherClasses, subjectTeacherClasses,
+      qualifications, experience,
       salary, dateOfJoining, gender, address, createLoginAccount, teacherType,
     } = body;
 
@@ -137,7 +138,9 @@ export async function POST(req: NextRequest) {
       department: department.trim(),
       subjects: subjects || [],
       classes: classes || [],
-      classTeacher: teacherType === "class_teacher" ? (classes?.[0] || "") : "",
+      classTeacher: (classTeacherClasses && classTeacherClasses.length > 0) ? classTeacherClasses[0] : "",
+      classTeacherClasses: classTeacherClasses || [],
+      subjectTeacherClasses: subjectTeacherClasses || [],
       qualifications: qualifications || "",
       experience: Number(experience) || 0,
       salary: Number(salary) || 0,

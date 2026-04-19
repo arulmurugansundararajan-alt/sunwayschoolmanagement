@@ -30,9 +30,17 @@ export async function GET() {
     }
 
     // Get students in the staff's assigned classes
-    // Staff.classes contains grade strings like "Grade 1A", "Pre KG" (same as SCHOOL_GRADES)
-    // Student.className stores the same full grade string, section is derived via getSectionFromGrade
-    const classFilters = staff.classes.map((cls: string) => {
+    // classTeacherClasses + subjectTeacherClasses are the new fields; fall back to legacy .classes
+    const classTeacherClasses: string[] = (staff as { classTeacherClasses?: string[] }).classTeacherClasses ?? [];
+    const subjectTeacherClasses: string[] = (staff as { subjectTeacherClasses?: string[] }).subjectTeacherClasses ?? [];
+    // All unique classes this staff is associated with
+    const allClasses: string[] = Array.from(new Set([
+      ...classTeacherClasses,
+      ...subjectTeacherClasses,
+      ...(staff.classes || []),
+    ]));
+
+    const classFilters = allClasses.map((cls: string) => {
       const section = getSectionFromGrade(cls);
       return { className: cls, section };
     });
@@ -78,19 +86,20 @@ export async function GET() {
       ? Math.round(((presentToday + lateToday) / totalStudents) * 100)
       : 0;
 
-    // Build class summary
-    // A teacher is class teacher of a class if:
-    // 1. classTeacher field explicitly matches, OR
-    // 2. classTeacher is unset/empty AND they only handle one class (backward-compat fallback)
-    const isSingleClass = staff.classes.length === 1;
-    const classSummary = staff.classes.map((cls: string) => {
+    // Build class summary — each class tagged with the staff's role in it
+    const classSummary = allClasses.map((cls: string) => {
       const section = getSectionFromGrade(cls);
       const classStudents = students.filter(
         (s) => s.className === cls && s.section === section
       );
-      const isClassTeacher =
-        (staff.classTeacher && staff.classTeacher === cls) ||
-        (!staff.classTeacher && isSingleClass);
+      const isClassTeacher = classTeacherClasses.includes(cls) ||
+        // legacy fallback: if no new fields set, use old classTeacher field
+        (classTeacherClasses.length === 0 && subjectTeacherClasses.length === 0 &&
+          (staff.classTeacher === cls || (staff.classes.length === 1)));
+      const isSubjectTeacher = subjectTeacherClasses.includes(cls) ||
+        // legacy fallback
+        (classTeacherClasses.length === 0 && subjectTeacherClasses.length === 0 &&
+          (staff as { teacherType?: string }).teacherType === "subject_teacher");
       return {
         name: cls,
         className: cls,
@@ -98,6 +107,12 @@ export async function GET() {
         studentCount: classStudents.length,
         subjects: staff.subjects,
         isClassTeacher: !!isClassTeacher,
+        isSubjectTeacher: !!isSubjectTeacher,
+        roleLabel: isClassTeacher && isSubjectTeacher
+          ? "Class Teacher + Subject Teacher"
+          : isClassTeacher
+          ? "Class Teacher"
+          : "Subject Teacher",
       };
     });
 
@@ -115,6 +130,8 @@ export async function GET() {
           subjects: staff.subjects,
           classes: staff.classes,
           classTeacher: staff.classTeacher || "",
+          classTeacherClasses,
+          subjectTeacherClasses,
           qualifications: staff.qualifications,
           experience: staff.experience,
           gender: staff.gender,

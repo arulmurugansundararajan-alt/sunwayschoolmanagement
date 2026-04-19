@@ -65,6 +65,8 @@ export interface Staff {
   subjects: string[];
   classes: string[];
   classTeacher?: string;
+  classTeacherClasses: string[];
+  subjectTeacherClasses: string[];
   qualifications: string;
   experience: number;
   salary: number;
@@ -72,7 +74,7 @@ export interface Staff {
   gender: Gender;
   address: string;
   photo?: string;
-  teacherType?: "class_teacher" | "subject_teacher";
+  teacherType?: "class_teacher" | "subject_teacher" | "both";
   userId?: string;
   hasLoginAccount?: boolean;
   isActive: boolean;

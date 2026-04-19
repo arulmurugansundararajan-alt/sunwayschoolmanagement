@@ -22,13 +22,15 @@ export interface StaffFormData {
   department: string;
   subjects: string[];
   classes: string[];
+  classTeacherClasses: string[];
+  subjectTeacherClasses: string[];
   qualifications: string;
   experience: number;
   salary: number;
   dateOfJoining: string;
   gender: "Male" | "Female" | "Other";
   address: string;
-  teacherType?: "class_teacher" | "subject_teacher";
+  teacherType?: "class_teacher" | "subject_teacher" | "both";
   createLoginAccount?: boolean;
 }
 

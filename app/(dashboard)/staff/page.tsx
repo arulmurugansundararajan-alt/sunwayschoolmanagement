@@ -7,7 +7,7 @@ import StatCard from "@/components/shared/StatCard";
 import BarChartComponent from "@/components/charts/BarChartComponent";
 import { Avatar } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
-import { Users, ClipboardList, Award, Bell, BookOpen, Loader2 } from "lucide-react";
+import { Users, ClipboardList, Award, Bell, BookOpen, Loader2, GraduationCap } from "lucide-react";
 
 interface StaffProfile {
   name: string;
@@ -24,6 +24,9 @@ interface ClassSummary {
   section: string;
   studentCount: number;
   subjects: string[];
+  isClassTeacher: boolean;
+  isSubjectTeacher: boolean;
+  roleLabel: string;
 }
 
 interface StudentInfo {
@@ -221,26 +224,45 @@ export default function StaffDashboard() {
             <p className="text-sm text-gray-400 text-center py-8">No classes assigned yet</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {classSummary.map((cls) => (
-                <div key={cls.name} className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                      <BookOpen className="w-5 h-5 text-emerald-600" />
+              {classSummary.map((cls) => {
+                const cardColor = cls.isClassTeacher && cls.isSubjectTeacher
+                  ? "from-emerald-50 to-blue-50 border-emerald-100"
+                  : cls.isClassTeacher
+                  ? "from-emerald-50 to-teal-50 border-emerald-100"
+                  : "from-blue-50 to-indigo-50 border-blue-100";
+                return (
+                  <div key={cls.name} className={`p-4 bg-gradient-to-br ${cardColor} rounded-xl border`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                        <BookOpen className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">{cls.name}</p>
+                        <p className="text-xs text-gray-500">{cls.studentCount} students</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-gray-900">{cls.name}</p>
-                      <p className="text-xs text-gray-500">{cls.studentCount} students</p>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {cls.isClassTeacher && (
+                        <span className="text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                          <GraduationCap className="w-3 h-3" /> Class Teacher
+                        </span>
+                      )}
+                      {cls.isSubjectTeacher && (
+                        <span className="text-xs bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" /> Subject Teacher
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {cls.subjects.slice(0, 3).map((sub) => (
+                        <span key={sub} className="text-xs bg-white border border-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                          {sub}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {cls.subjects.slice(0, 3).map((sub) => (
-                      <span key={sub} className="text-xs bg-white border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded-full">
-                        {sub}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogCloseButton } from "@/components/ui/dialog";
-import { Users, BookOpen, ChevronRight, Loader2 } from "lucide-react";
+import { Users, BookOpen, ChevronRight, Loader2, GraduationCap } from "lucide-react";
 import { getSubjectColor } from "@/lib/utils";
 
 interface ClassSummary {
@@ -15,6 +15,9 @@ interface ClassSummary {
   section: string;
   studentCount: number;
   subjects: string[];
+  isClassTeacher: boolean;
+  isSubjectTeacher: boolean;
+  roleLabel: string;
 }
 
 interface StudentInfo {
@@ -91,44 +94,64 @@ export default function StaffClassesPage() {
     <div className="space-y-5">
       {/* Class Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-        {classes.map((cls, i) => (
-          <div
-            key={cls.name}
-            onClick={() => setSelectedClass(cls)}
-            className="cursor-pointer group rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
-          >
-            <div className={`bg-gradient-to-br ${gradients[i % gradients.length]} p-5 text-white`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-white/70 font-medium uppercase tracking-wider">Class</p>
-                  <h3 className="text-3xl font-extrabold">{cls.name}</h3>
+        {classes.map((cls, i) => {
+          const gradient = cls.isClassTeacher && cls.isSubjectTeacher
+            ? gradients[0]
+            : cls.isClassTeacher
+            ? "from-emerald-500 via-teal-500 to-cyan-600"
+            : "from-blue-500 via-indigo-500 to-violet-600";
+          return (
+            <div
+              key={cls.name}
+              onClick={() => setSelectedClass(cls)}
+              className="cursor-pointer group rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+            >
+              <div className={`bg-gradient-to-br ${gradient} p-5 text-white`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-white/70 font-medium uppercase tracking-wider">Class</p>
+                    <h3 className="text-3xl font-extrabold">{cls.name}</h3>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {cls.isClassTeacher && (
+                      <span className="text-xs bg-white/25 rounded-full px-2 py-0.5 font-semibold flex items-center gap-1">
+                        <GraduationCap className="w-3 h-3" /> Class Teacher
+                      </span>
+                    )}
+                    {cls.isSubjectTeacher && (
+                      <span className="text-xs bg-white/25 rounded-full px-2 py-0.5 font-semibold flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" /> Subject Teacher
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                  <BookOpen className="w-6 h-6" />
+                <div className="flex gap-4 mt-4">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 opacity-70" />
+                    <span className="text-sm">{cls.studentCount} students</span>
+                  </div>
+                  {cls.isClassTeacher && (
+                    <span className="text-xs bg-white/20 rounded px-1.5 py-0.5">Can mark attendance</span>
+                  )}
                 </div>
               </div>
-              <div className="flex gap-4 mt-4">
-                <div className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 opacity-70" />
-                  <span className="text-sm">{cls.studentCount} students</span>
+              <div className="bg-white p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Subjects</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {cls.subjects.map((sub) => (
+                    <span key={sub} className={`text-xs px-2 py-0.5 rounded-full font-medium border ${getSubjectColor(sub)}`}>
+                      {sub}
+                    </span>
+                  ))}
+                  {cls.subjects.length === 0 && <span className="text-xs text-gray-400">No subjects assigned</span>}
+                </div>
+                <div className="flex items-center justify-end mt-3 text-emerald-600 text-xs font-semibold group-hover:text-emerald-700">
+                  View Roster <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
                 </div>
               </div>
             </div>
-            <div className="bg-white p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Subjects</p>
-              <div className="flex flex-wrap gap-1.5">
-                {cls.subjects.map((sub) => (
-                  <span key={sub} className={`text-xs px-2 py-0.5 rounded-full font-medium border ${getSubjectColor(sub)}`}>
-                    {sub}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center justify-end mt-3 text-emerald-600 text-xs font-semibold group-hover:text-emerald-700">
-                View Roster <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Class Roster Dialog */}

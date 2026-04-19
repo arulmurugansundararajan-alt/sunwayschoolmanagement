@@ -14,6 +14,8 @@ interface ClassInfo {
   section: string;
   studentCount: number;
   isClassTeacher: boolean;
+  isSubjectTeacher: boolean;
+  roleLabel: string;
 }
 
 interface StudentInfo {
@@ -48,15 +50,19 @@ export default function StaffAttendancePage() {
         const res = await fetch("/api/staff/me", { cache: "no-store" });
         const json = await res.json();
         if (json.success) {
-          if (json.data.profile?.teacherType === "subject_teacher") {
+          // Only class teachers can mark attendance — filter to homeroom classes only
+          const classTeacherClasses = (json.data.classSummary as ClassInfo[]).filter(
+            (c) => c.isClassTeacher
+          );
+          if (classTeacherClasses.length === 0) {
             setIsSubjectTeacher(true);
             setLoading(false);
             return;
           }
-          setClasses(json.data.classSummary);
+          setClasses(classTeacherClasses);
           setStudents(json.data.students);
-          if (json.data.classSummary.length > 0) {
-            setSelectedClass(json.data.classSummary[0]);
+          if (classTeacherClasses.length > 0) {
+            setSelectedClass(classTeacherClasses[0]);
           }
         }
       } catch {
@@ -185,8 +191,8 @@ export default function StaffAttendancePage() {
         <div>
           <h3 className="text-lg font-semibold text-gray-800">Attendance Not Available</h3>
           <p className="text-sm text-gray-500 mt-1 max-w-sm">
-            As a subject teacher, you are not assigned to a class and cannot mark attendance.
-            Only class teachers have access to this feature.
+            You are not assigned as a Class Teacher for any class. Only Class Teachers can mark attendance.
+            Contact admin if this is incorrect.
           </p>
         </div>
       </div>

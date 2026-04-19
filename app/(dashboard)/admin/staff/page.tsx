@@ -32,14 +32,14 @@ const staffSchema = z.object({
   designation: z.string().min(2, "Designation is required"),
   department: z.string().min(2, "Department is required"),
   subjectsRaw: z.string().optional(),
-  classesRaw: z.string().optional(),
   qualifications: z.string().optional(),
   experience: z.coerce.number().min(0, "Experience cannot be negative"),
   salary: z.coerce.number().min(0, "Salary cannot be negative"),
   dateOfJoining: z.string().min(1, "Date of joining is required"),
   gender: z.enum(["Male", "Female", "Other"]),
   address: z.string().optional(),
-  teacherType: z.enum(["class_teacher", "subject_teacher"]).default("class_teacher"),
+  classTeacherClassesRaw: z.string().optional(),  // comma-sep: homeroom classes
+  subjectTeacherClassesRaw: z.string().optional(), // comma-sep: subject-teaching classes
   createLoginAccount: z.boolean().optional(),
 });
 type StaffFormValues = z.infer<typeof staffSchema>;
@@ -99,7 +99,7 @@ export default function StaffManagementPage() {
 
   const addForm = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
-    defaultValues: { experience: 0, salary: 0, createLoginAccount: true, gender: "Male", teacherType: "class_teacher" },
+    defaultValues: { experience: 0, salary: 0, createLoginAccount: true, gender: "Male" },
   });
 
   const editForm = useForm<StaffFormValues>({ resolver: zodResolver(staffSchema) });
@@ -113,39 +113,52 @@ export default function StaffManagementPage() {
         designation: editStaff.designation,
         department: editStaff.department,
         subjectsRaw: editStaff.subjects.join(", "),
-        classesRaw: editStaff.teacherType === "subject_teacher"
-          ? editStaff.classes.join(", ")
-          : (editStaff.classes[0] || ""),
+        classTeacherClassesRaw: (editStaff.classTeacherClasses ?? []).join(", "),
+        subjectTeacherClassesRaw: (editStaff.subjectTeacherClasses ?? []).join(", "),
         qualifications: editStaff.qualifications,
         experience: editStaff.experience,
         salary: editStaff.salary,
         dateOfJoining: editStaff.dateOfJoining,
         gender: editStaff.gender,
         address: editStaff.address,
-        teacherType: editStaff.teacherType || "class_teacher",
       });
     }
   }, [editStaff, editForm]);
 
-  const parseFormData = (values: StaffFormValues): StaffFormData => ({
-    name: values.name,
-    email: values.email,
-    phone: values.phone,
-    designation: values.designation,
-    department: values.department,
-    subjects: values.subjectsRaw ? values.subjectsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [],
-    classes: values.teacherType === "subject_teacher"
-      ? (values.classesRaw ? values.classesRaw.split(",").map((s) => s.trim()).filter(Boolean) : [])
-      : (values.classesRaw?.trim() ? [values.classesRaw.trim()] : []),
-    qualifications: values.qualifications || "",
-    experience: values.experience,
-    salary: values.salary,
-    dateOfJoining: values.dateOfJoining,
-    gender: values.gender,
-    address: values.address || "",
-    teacherType: values.teacherType,
-    createLoginAccount: values.createLoginAccount,
-  });
+  const parseFormData = (values: StaffFormValues): StaffFormData => {
+    const classTeacherClasses = values.classTeacherClassesRaw
+      ? values.classTeacherClassesRaw.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+    const subjectTeacherClasses = values.subjectTeacherClassesRaw
+      ? values.subjectTeacherClassesRaw.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+    const allClasses = Array.from(new Set([...classTeacherClasses, ...subjectTeacherClasses]));
+    const teacherType =
+      classTeacherClasses.length > 0 && subjectTeacherClasses.length > 0
+        ? "both"
+        : subjectTeacherClasses.length > 0
+        ? "subject_teacher"
+        : "class_teacher";
+    return {
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      designation: values.designation,
+      department: values.department,
+      subjects: values.subjectsRaw ? values.subjectsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      classes: allClasses,
+      classTeacherClasses,
+      subjectTeacherClasses,
+      qualifications: values.qualifications || "",
+      experience: values.experience,
+      salary: values.salary,
+      dateOfJoining: values.dateOfJoining,
+      gender: values.gender,
+      address: values.address || "",
+      teacherType,
+      createLoginAccount: values.createLoginAccount,
+    };
+  };
 
   const handleAddSubmit = async (values: StaffFormValues) => {
     setSubmitting(true);
@@ -584,7 +597,7 @@ export default function StaffManagementPage() {
         <DialogFooter>
           {addSuccess ? (
             <>
-              <Button variant="outline" onClick={() => { setAddSuccess(null); setAddStep(1); addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male", teacherType: "class_teacher" }); }}>
+              <Button variant="outline" onClick={() => { setAddSuccess(null); setAddStep(1); addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male" }); }}>
                 Add Another
               </Button>
               <Button onClick={() => { setShowAddModal(false); setAddStep(1); }}>Done</Button>
@@ -803,7 +816,7 @@ export default function StaffManagementPage() {
 
 
 // ─── Shared Staff Form Fields ─────────────────────────────────────────────────
-const STAFF_STEPS = ["Personal Info", "Professional", "Teacher Type"];
+const STAFF_STEPS = ["Personal Info", "Professional", "Role & Classes"];
 
 function StaffFormFields({
   form,
@@ -822,15 +835,23 @@ function StaffFormFields({
   const { register, formState: { errors }, watch, setValue } = form;
 
   const dateOfJoining = watch("dateOfJoining");
-  const classesValue = watch("classesRaw") || "";
-  const teacherType = watch("teacherType");
-  const selectedClasses = classesValue.split(",").map((s) => s.trim()).filter(Boolean);
+  const classTeacherRaw = watch("classTeacherClassesRaw") || "";
+  const subjectTeacherRaw = watch("subjectTeacherClassesRaw") || "";
+  const classTeacherClasses = classTeacherRaw.split(",").map((s) => s.trim()).filter(Boolean);
+  const subjectTeacherClasses = subjectTeacherRaw.split(",").map((s) => s.trim()).filter(Boolean);
 
-  const toggleClass = (grade: string) => {
-    const updated = selectedClasses.includes(grade)
-      ? selectedClasses.filter((c) => c !== grade)
-      : [...selectedClasses, grade];
-    setValue("classesRaw", updated.join(", "));
+  const toggleClassTeacher = (grade: string) => {
+    const updated = classTeacherClasses.includes(grade)
+      ? classTeacherClasses.filter((c) => c !== grade)
+      : [...classTeacherClasses, grade];
+    setValue("classTeacherClassesRaw", updated.join(", "));
+  };
+
+  const toggleSubjectTeacher = (grade: string) => {
+    const updated = subjectTeacherClasses.includes(grade)
+      ? subjectTeacherClasses.filter((c) => c !== grade)
+      : [...subjectTeacherClasses, grade];
+    setValue("subjectTeacherClassesRaw", updated.join(", "));
   };
 
   const currentYear = new Date().getFullYear();
@@ -969,73 +990,80 @@ function StaffFormFields({
         </div>
       )}
 
-      {/* Step 3 - Teacher Type & Classes */}
+      {/* Step 3 - Role & Classes */}
       {step === 3 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
-            <span className="w-2 h-2 bg-purple-600 rounded-full" />
-            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Teacher Type</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className={cn(
-              "flex items-start gap-3 px-4 py-3 border cursor-pointer transition-colors",
-              teacherType === "class_teacher" ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "border-gray-200 text-gray-600 hover:border-emerald-200"
-            )}>
-              <input type="radio" value="class_teacher" {...register("teacherType")} disabled={submitting} className="mt-0.5 accent-emerald-600" />
-              <div>
-                <p className="text-sm font-semibold">Class Teacher</p>
-                <p className="text-xs text-gray-500 mt-0.5">Owns a class, can mark attendance</p>
-              </div>
-            </label>
-            <label className={cn(
-              "flex items-start gap-3 px-4 py-3 border cursor-pointer transition-colors",
-              teacherType === "subject_teacher" ? "bg-blue-50 border-blue-300 text-blue-800" : "border-gray-200 text-gray-600 hover:border-blue-200"
-            )}>
-              <input type="radio" value="subject_teacher" {...register("teacherType")} disabled={submitting} className="mt-0.5 accent-blue-600" />
-              <div>
-                <p className="text-sm font-semibold">Subject Teacher</p>
-                <p className="text-xs text-gray-500 mt-0.5">Teaches subjects across classes</p>
-              </div>
-            </label>
-          </div>
-
-          <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-            <span className="w-2 h-2 bg-purple-600 rounded-full" />
-            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
-              {teacherType === "class_teacher" ? "Homeroom Class (one class or none)" : "Classes Teaching (select all applicable)"}
-            </span>
-          </div>
-          {teacherType === "class_teacher" ? (
-            <select
-              value={classesValue.trim()}
-              onChange={(e) => setValue("classesRaw", e.target.value)}
-              disabled={submitting}
-              className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="">— No class assigned —</option>
-              {SCHOOL_GRADES.map((grade) => (
-                <option key={grade} value={grade}>{grade}</option>
-              ))}
-            </select>
-          ) : (
+        <div className="space-y-5">
+          {/* Class Teacher Section */}
+          <div>
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+              <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Homeroom / Class Teacher</span>
+              <span className="text-xs text-gray-400 ml-1">— can mark attendance</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-2">Select the class(es) this teacher is the homeroom teacher of (leave empty if not a class teacher):</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SCHOOL_GRADES.map((grade) => (
                 <label key={grade} className={cn(
-                  "flex items-center gap-2 px-3 py-2 border cursor-pointer text-sm transition-colors",
-                  selectedClasses.includes(grade) ? "bg-blue-50 border-blue-300 text-blue-700" : "border-gray-200 text-gray-600 hover:border-blue-200"
+                  "flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer text-sm transition-colors",
+                  classTeacherClasses.includes(grade)
+                    ? "bg-emerald-50 border-emerald-400 text-emerald-800 font-semibold"
+                    : "border-gray-200 text-gray-600 hover:border-emerald-200"
                 )}>
-                  <input type="checkbox" checked={selectedClasses.includes(grade)} onChange={() => toggleClass(grade)} disabled={submitting} className="w-3.5 h-3.5 accent-blue-600" />
+                  <input type="checkbox" checked={classTeacherClasses.includes(grade)} onChange={() => toggleClassTeacher(grade)} disabled={submitting} className="w-3.5 h-3.5 accent-emerald-600" />
                   {grade}
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Subject Teacher Section */}
+          <div>
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
+              <span className="w-2 h-2 bg-blue-500 rounded-full" />
+              <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Subject Teacher</span>
+              <span className="text-xs text-gray-400 ml-1">— teaches subjects in these classes</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-2">Select the class(es) this teacher teaches subjects in (can overlap with homeroom classes):</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {SCHOOL_GRADES.map((grade) => (
+                <label key={grade} className={cn(
+                  "flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer text-sm transition-colors",
+                  subjectTeacherClasses.includes(grade)
+                    ? "bg-blue-50 border-blue-400 text-blue-800 font-semibold"
+                    : "border-gray-200 text-gray-600 hover:border-blue-200"
+                )}>
+                  <input type="checkbox" checked={subjectTeacherClasses.includes(grade)} onChange={() => toggleSubjectTeacher(grade)} disabled={submitting} className="w-3.5 h-3.5 accent-blue-600" />
+                  {grade}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Role summary */}
+          {(classTeacherClasses.length > 0 || subjectTeacherClasses.length > 0) && (
+            <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 space-y-1">
+              {classTeacherClasses.length > 0 && (
+                <p><span className="font-semibold text-emerald-700">Class Teacher:</span> {classTeacherClasses.join(", ")}</p>
+              )}
+              {subjectTeacherClasses.length > 0 && (
+                <p><span className="font-semibold text-blue-700">Subject Teacher:</span> {subjectTeacherClasses.join(", ")}</p>
+              )}
+              <p className="text-gray-400 pt-1">
+                Role: <span className="font-semibold text-gray-700">
+                  {classTeacherClasses.length > 0 && subjectTeacherClasses.length > 0
+                    ? "Class Teacher + Subject Teacher"
+                    : classTeacherClasses.length > 0
+                    ? "Class Teacher only"
+                    : "Subject Teacher only"}
+                </span>
+              </p>
+            </div>
           )}
 
           {showLoginOption && (
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none p-3 bg-purple-50 border border-purple-100">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none p-3 bg-purple-50 border border-purple-100 rounded-lg">
               <input type="checkbox" {...register("createLoginAccount")} className="w-4 h-4 accent-purple-600" />
               Create login account for this staff member
-              <span className="text-xs text-gray-400">(default password: firstname@year)</span>
             </label>
           )}
         </div>

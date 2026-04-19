@@ -8,8 +8,10 @@ export interface IStaff extends Document {
   designation: string;
   department: string;
   subjects: string[];
-  classes: string[];
-  classTeacher?: string; // class this staff is the class teacher of
+  classes: string[];               // union of all classes (legacy + computed)
+  classTeacher?: string;           // legacy single class teacher field
+  classTeacherClasses: string[];   // classes where this staff is class/homeroom teacher
+  subjectTeacherClasses: string[]; // classes where this staff teaches subjects
   qualifications: string;
   experience: number;
   salary: number;
@@ -17,8 +19,8 @@ export interface IStaff extends Document {
   gender: "Male" | "Female" | "Other";
   address: string;
   photo?: string;
-  teacherType: "class_teacher" | "subject_teacher";
-  userId?: mongoose.Types.ObjectId; // linked User account for login
+  teacherType: "class_teacher" | "subject_teacher" | "both";
+  userId?: mongoose.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -35,6 +37,8 @@ const StaffSchema = new Schema<IStaff>(
     subjects: [{ type: String, trim: true }],
     classes: [{ type: String, trim: true }],
     classTeacher: { type: String, trim: true, default: "" },
+    classTeacherClasses: [{ type: String, trim: true }],
+    subjectTeacherClasses: [{ type: String, trim: true }],
     qualifications: { type: String, trim: true, default: "" },
     experience: { type: Number, required: true, min: 0 },
     salary: { type: Number, required: true, min: 0 },
@@ -42,7 +46,7 @@ const StaffSchema = new Schema<IStaff>(
     gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
     address: { type: String, trim: true, default: "" },
     photo: { type: String },
-    teacherType: { type: String, enum: ["class_teacher", "subject_teacher"], default: "class_teacher" },
+    teacherType: { type: String, enum: ["class_teacher", "subject_teacher", "both"], default: "class_teacher" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     isActive: { type: Boolean, default: true },
   },

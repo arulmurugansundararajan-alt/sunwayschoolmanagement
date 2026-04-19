@@ -132,6 +132,8 @@ export const mockStaff: Staff[] = staffData.map((s, i) => ({
   department: s.department,
   subjects: s.subjects,
   classes: [`cls${(i % 10) + 1}`, `cls${((i + 1) % 10) + 1}`],
+  classTeacherClasses: i % 2 === 0 ? [`cls${(i % 10) + 1}`] : [],
+  subjectTeacherClasses: [`cls${((i + 1) % 10) + 1}`],
   qualifications: `M.Sc., B.Ed.${i % 3 === 0 ? ", M.Ed." : ""}`,
   experience: s.experience,
   salary: 35000 + (s.experience * 1500),

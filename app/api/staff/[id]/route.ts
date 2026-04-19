@@ -48,8 +48,17 @@ export async function PUT(
     // Prevent staffId and email from being changed (use a separate flow if needed)
     const { staffId: _staffId, email: _email, userId: _userId, ...updateFields } = body;
 
-    // Sync classTeacher field based on teacherType and classes
-    if (updateFields.teacherType === "class_teacher") {
+    // Sync classTeacher + classes from new role arrays
+    if (updateFields.classTeacherClasses !== undefined || updateFields.subjectTeacherClasses !== undefined) {
+      const ctc = updateFields.classTeacherClasses ?? [];
+      const stc = updateFields.subjectTeacherClasses ?? [];
+      updateFields.classTeacher = ctc[0] || "";
+      updateFields.classes = Array.from(new Set([...ctc, ...stc]));
+      updateFields.teacherType =
+        ctc.length > 0 && stc.length > 0 ? "both"
+        : stc.length > 0 ? "subject_teacher"
+        : "class_teacher";
+    } else if (updateFields.teacherType === "class_teacher") {
       updateFields.classTeacher = updateFields.classes?.[0] || "";
     } else if (updateFields.teacherType === "subject_teacher") {
       updateFields.classTeacher = "";
