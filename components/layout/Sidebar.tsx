@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, UserCheck, BookOpen, Calendar, DollarSign,
   BarChart3, MessageSquare, Bell, Settings, LogOut, GraduationCap,
   ClipboardList, FileText, Clock, PlusCircle, Home, Award, ChevronLeft,
-  ChevronRight, Shield, Book, Megaphone
+  ChevronRight, Shield, Book, Megaphone, Receipt
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -21,6 +21,7 @@ const adminNavItems = [
   { label: "Students", href: "/admin/students", icon: Users },
   { label: "Staff", href: "/admin/staff", icon: UserCheck },
   { label: "Fee Management", href: "/admin/fees", icon: DollarSign },
+  { label: "Expenses", href: "/admin/expenses", icon: Receipt },
   { label: "Events & Calendar", href: "/admin/events", icon: Calendar },
   { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
