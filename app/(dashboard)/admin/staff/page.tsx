@@ -31,6 +31,7 @@ const staffSchema = z.object({
   phone: z.string().min(10, "Phone must be at least 10 digits").max(15),
   designation: z.string().min(2, "Designation is required"),
   department: z.string().min(2, "Department is required"),
+  staffRole: z.enum(["teacher", "accountant"]).default("teacher"),
   subjectsRaw: z.string().optional(),
   qualifications: z.string().optional(),
   experience: z.coerce.number().min(0, "Experience cannot be negative"),
@@ -38,8 +39,8 @@ const staffSchema = z.object({
   dateOfJoining: z.string().min(1, "Date of joining is required"),
   gender: z.enum(["Male", "Female", "Other"]),
   address: z.string().optional(),
-  classTeacherClassesRaw: z.string().optional(),  // comma-sep: homeroom classes
-  subjectTeacherClassesRaw: z.string().optional(), // comma-sep: subject-teaching classes
+  classTeacherClassesRaw: z.string().optional(),
+  subjectTeacherClassesRaw: z.string().optional(),
   createLoginAccount: z.boolean().optional(),
 });
 type StaffFormValues = z.infer<typeof staffSchema>;
@@ -99,7 +100,7 @@ export default function StaffManagementPage() {
 
   const addForm = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
-    defaultValues: { experience: 0, salary: 0, createLoginAccount: true, gender: "Male" },
+    defaultValues: { experience: 0, salary: 0, createLoginAccount: true, gender: "Male", staffRole: "teacher" },
   });
 
   const editForm = useForm<StaffFormValues>({ resolver: zodResolver(staffSchema) });
@@ -112,6 +113,7 @@ export default function StaffManagementPage() {
         phone: editStaff.phone,
         designation: editStaff.designation,
         department: editStaff.department,
+        staffRole: (editStaff.staffRole as StaffFormValues["staffRole"]) || "teacher",
         subjectsRaw: editStaff.subjects.join(", "),
         classTeacherClassesRaw: (editStaff.classTeacherClasses ?? []).join(", "),
         subjectTeacherClassesRaw: (editStaff.subjectTeacherClasses ?? []).join(", "),
@@ -145,6 +147,7 @@ export default function StaffManagementPage() {
       phone: values.phone,
       designation: values.designation,
       department: values.department,
+      staffRole: values.staffRole || "teacher",
       subjects: values.subjectsRaw ? values.subjectsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [],
       classes: allClasses,
       classTeacherClasses,
@@ -353,6 +356,7 @@ export default function StaffManagementPage() {
             <p className="text-sm">No staff members found</p>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -451,6 +455,7 @@ export default function StaffManagementPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
 
         {pagination.totalPages > 1 && (
@@ -938,6 +943,42 @@ function StaffFormFields({
             <span className="w-2 h-2 bg-purple-600 rounded-full" />
             <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Professional Details</span>
           </div>
+
+          {/* Staff Role Selection — Teacher or Accountant */}
+          <div className="flex items-start gap-3">
+            <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right pt-1">Staff Role *</label>
+            <div className="flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { value: "teacher",    label: "Teacher",    icon: "🧑‍🏫", desc: "Classes, attendance, marks & assignments" },
+                  { value: "accountant", label: "Accountant", icon: "💰",   desc: "Fee details & expense records" },
+                ] as const).map((r) => {
+                  const selected = watch("staffRole") === r.value;
+                  return (
+                    <label
+                      key={r.value}
+                      className={cn(
+                        "flex flex-col gap-1 px-4 py-3 border rounded-xl cursor-pointer transition-colors",
+                        selected
+                          ? "border-purple-500 bg-purple-50 text-purple-700 shadow-sm"
+                          : "border-gray-200 hover:border-purple-300 hover:bg-purple-50/30"
+                      )}
+                    >
+                      <input type="radio" value={r.value} {...register("staffRole")} className="sr-only" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{r.icon}</span>
+                        <span className="font-semibold text-sm">{r.label}</span>
+                        {selected && <span className="ml-auto text-purple-500">✓</span>}
+                      </div>
+                      <span className="text-[11px] text-gray-500 leading-snug">{r.desc}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {errors.staffRole && <p className="text-xs text-red-500 mt-1">{errors.staffRole.message}</p>}
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Designation *</label>
             <div className="flex-1">

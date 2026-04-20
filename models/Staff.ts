@@ -20,6 +20,7 @@ export interface IStaff extends Document {
   address: string;
   photo?: string;
   teacherType: "class_teacher" | "subject_teacher" | "both";
+  staffRole: "teacher" | "accountant";
   userId?: mongoose.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
@@ -47,6 +48,11 @@ const StaffSchema = new Schema<IStaff>(
     address: { type: String, trim: true, default: "" },
     photo: { type: String },
     teacherType: { type: String, enum: ["class_teacher", "subject_teacher", "both"], default: "class_teacher" },
+    staffRole: {
+      type: String,
+      enum: ["teacher", "accountant"],
+      default: "teacher",
+    },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     isActive: { type: Boolean, default: true },
   },

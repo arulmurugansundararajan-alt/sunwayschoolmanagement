@@ -75,6 +75,7 @@ export interface Staff {
   address: string;
   photo?: string;
   teacherType?: "class_teacher" | "subject_teacher" | "both";
+  staffRole?: "teacher" | "accountant";
   userId?: string;
   hasLoginAccount?: boolean;
   isActive: boolean;

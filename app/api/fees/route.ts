@@ -4,12 +4,28 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import FeeModel from "@/models/Fee";
 import StudentModel from "@/models/Student";
+import { getStaffRole } from "@/lib/staffAccess";
 
 // GET /api/fees
+// Admin: full access with summary stats
+// Accountant staff: fee records only (no financial summary)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+
+    const userRole = (session.user as { role?: string }).role;
+    let isAccountant = false;
+
+    if (userRole === "admin") {
+      // full access
+    } else if (userRole === "staff") {
+      const staffRole = await getStaffRole();
+      if (staffRole !== "accountant") {
+        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+      }
+      isAccountant = true;
+    } else {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -71,7 +87,8 @@ export async function GET(request: NextRequest) {
       success: true,
       data: fees,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-      summary: { ...summary, collectionRate },
+      // Accountants do NOT get financial summary
+      summary: isAccountant ? null : { ...summary, collectionRate },
       feeTypes: feeTypes.sort(),
       classes: classes.sort(),
     });
@@ -85,8 +102,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    const userRole = (session.user as { role?: string }).role;
+    if (userRole !== "admin") {
+      if (userRole === "staff") {
+        const staffRole = await getStaffRole();
+        if (staffRole !== "accountant") {
+          return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+        }
+      } else {
+        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+      }
     }
 
     await connectDB();

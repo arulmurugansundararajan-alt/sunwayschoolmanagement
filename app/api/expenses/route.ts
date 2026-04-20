@@ -3,14 +3,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import ExpenseModel from "@/models/Expense";
+import { getStaffRole } from "@/lib/staffAccess";
 
-// GET /api/expenses — list with filters (admin only)
+async function checkExpenseAccess() {
+  const session = await getServerSession(authOptions);
+  if (!session) return { ok: false, session: null };
+  const role = (session.user as { role?: string }).role;
+  if (role === "admin") return { ok: true, session };
+  if (role === "staff") {
+    const staffRole = await getStaffRole();
+    if (staffRole === "accountant") return { ok: true, session };
+  }
+  return { ok: false, session: null };
+}
+
+// GET /api/expenses — list with filters (admin + accountant)
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as { role?: string }).role !== "admin") {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
+    const { ok } = await checkExpenseAccess();
+    if (!ok) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
     await connectDB();
 
@@ -127,13 +138,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/expenses — create expense (admin only)
+// POST /api/expenses — create expense (admin + accountant)
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as { role?: string }).role !== "admin") {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
+    const { ok, session } = await checkExpenseAccess();
+    if (!ok || !session) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
     await connectDB();
     const body = await req.json();

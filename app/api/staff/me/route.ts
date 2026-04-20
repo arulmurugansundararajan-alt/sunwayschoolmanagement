@@ -136,6 +136,7 @@ export async function GET() {
           experience: staff.experience,
           gender: staff.gender,
           teacherType: (staff as { teacherType?: string }).teacherType || "class_teacher",
+          staffRole: (staff as { staffRole?: string }).staffRole || "teacher",
         },
         stats: {
           totalStudents,

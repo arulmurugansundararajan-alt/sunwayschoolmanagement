@@ -3,12 +3,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import ExpenseModel from "@/models/Expense";
+import { getStaffRole } from "@/lib/staffAccess";
 
-// PUT /api/expenses/[id] — update expense (admin only)
+async function checkExpenseAccess() {
+  const session = await getServerSession(authOptions);
+  if (!session) return false;
+  const role = (session.user as { role?: string }).role;
+  if (role === "admin") return true;
+  if (role === "staff") {
+    const staffRole = await getStaffRole();
+    return staffRole === "accountant";
+  }
+  return false;
+}
+
+// PUT /api/expenses/[id] — update expense (admin + accountant)
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as { role?: string }).role !== "admin") {
+    if (!(await checkExpenseAccess())) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -47,7 +59,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// DELETE /api/expenses/[id] — soft delete (admin only)
+// DELETE /api/expenses/[id] — admin only
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);

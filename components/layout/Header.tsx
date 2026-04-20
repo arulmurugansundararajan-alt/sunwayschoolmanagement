@@ -7,6 +7,7 @@ import { useState } from "react";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/components/providers/NotificationContext";
+import { LanguageToggle } from "@/components/shared/LanguageToggle";
 
 interface HeaderProps {
   title: string;
@@ -58,6 +59,7 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
+        <LanguageToggle />
         {/* Notifications */}
         <div className="relative">
           <button

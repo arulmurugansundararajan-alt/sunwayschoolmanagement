@@ -361,6 +361,7 @@ export default function StudentsPage() {
             <p className="text-sm">No students found</p>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -475,6 +476,7 @@ export default function StudentsPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
 
         {/* Pagination */}
@@ -633,12 +635,28 @@ export default function StudentsPage() {
               </div>
               {addSuccess.parentLoginEmail && (
                 <div className="w-full bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-left space-y-2">
-                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Parent Login Account Created</p>
+                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5" /> Parent Login Account Created
+                  </p>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-500 w-20 flex-shrink-0">Login Email</span>
                     <code className="flex-1 text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1 text-indigo-700 break-all">{addSuccess.parentLoginEmail}</code>
+                    <Button variant="ghost" size="icon-sm" onClick={() => copyToClipboard(addSuccess.parentLoginEmail!, "email")} title="Copy email">
+                      {copiedField === "email" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
                   </div>
-                  <p className="text-xs text-gray-400">Parent can log in using this email. They will be prompted to set their password on first login.</p>
+                  {addSuccess.parentLoginPassword ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 w-20 flex-shrink-0">Password</span>
+                      <code className="flex-1 text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1 text-emerald-700 break-all">{addSuccess.parentLoginPassword}</code>
+                      <Button variant="ghost" size="icon-sm" onClick={() => copyToClipboard(addSuccess.parentLoginPassword!, "password")} title="Copy password">
+                        {copiedField === "password" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </Button>
+                    </div>
+                  ) : null}
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                    ⚠️ Save these credentials now — the password will not be shown again.
+                  </p>
                 </div>
               )}
             </div>

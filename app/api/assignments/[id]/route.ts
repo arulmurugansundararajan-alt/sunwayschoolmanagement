@@ -22,7 +22,9 @@ export async function PUT(
 
     const userId = (session.user as { id?: string }).id;
     const body = await req.json();
-    const { title, description, subject, dueDate, academicYear } = body;
+    const { title, description, subject, dueDate, academicYear,
+      targetType, targetStudentId, targetStudentName,
+      submissionStudentId, submissionStatus, submissionGrade, submissionRemarks } = body;
 
     const assignment = await AssignmentModel.findById(id);
     if (!assignment || !assignment.isActive) {
@@ -39,6 +41,33 @@ export async function PUT(
     if (subject) assignment.subject = subject.trim();
     if (dueDate) assignment.dueDate = new Date(dueDate);
     if (academicYear) assignment.academicYear = academicYear;
+    if (targetType) assignment.targetType = targetType;
+    if (targetStudentId !== undefined) assignment.targetStudentId = targetStudentId || undefined;
+    if (targetStudentName !== undefined) assignment.targetStudentName = targetStudentName || undefined;
+
+    // Handle submission tracking
+    if (submissionStudentId && submissionStatus) {
+      const existing = assignment.submissions.find(
+        (s: { studentId: { toString(): string }; status: string; grade?: string; remarks?: string; submittedAt?: Date }) => s.studentId.toString() === submissionStudentId
+      );
+      if (existing) {
+        existing.status = submissionStatus;
+        if (submissionGrade !== undefined) existing.grade = submissionGrade;
+        if (submissionRemarks !== undefined) existing.remarks = submissionRemarks;
+        if (["submitted", "late", "graded"].includes(submissionStatus) && !existing.submittedAt) {
+          existing.submittedAt = new Date();
+        }
+      } else {
+        assignment.submissions.push({
+          studentId: submissionStudentId,
+          studentName: body.submissionStudentName || "",
+          status: submissionStatus,
+          grade: submissionGrade,
+          remarks: submissionRemarks,
+          submittedAt: ["submitted", "late", "graded"].includes(submissionStatus) ? new Date() : undefined,
+        });
+      }
+    }
 
     await assignment.save();
 

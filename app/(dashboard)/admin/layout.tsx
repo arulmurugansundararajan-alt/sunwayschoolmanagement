@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           onMenuClick={() => setMobileOpen(true)}
         />
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 animate-fade-in-up">{children}</div>
+          <div className="p-4 sm:p-6 animate-fade-in-up">{children}</div>
         </main>
       </div>
       <ChatWidget />

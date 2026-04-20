@@ -30,6 +30,8 @@ import {
   Calendar,
   CheckCircle2,
   ClipboardList,
+  User,
+  Users,
 } from "lucide-react";
 
 interface Assignment {
@@ -42,6 +44,10 @@ interface Assignment {
   dueDate: string;
   createdByName: string;
   academicYear: string;
+  targetType?: "class" | "student";
+  targetStudentId?: string;
+  targetStudentName?: string;
+  submissionsCount?: number;
   createdAt: string;
 }
 
@@ -59,6 +65,9 @@ const assignmentSchema = z.object({
   section: z.string().min(1, "Section is required"),
   dueDate: z.string().min(1, "Due date is required"),
   academicYear: z.string().min(1, "Academic year is required"),
+  targetType: z.enum(["class", "student"]).default("class"),
+  targetStudentId: z.string().optional(),
+  targetStudentName: z.string().optional(),
 });
 type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 
@@ -132,9 +141,12 @@ export default function StaffAssignmentsPage() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message || "Failed");
+      const targetLabel = values.targetType === "student" && values.targetStudentName
+        ? `for ${values.targetStudentName}`
+        : `for Class ${values.className}`;
       addNotification({
         title: "New Assignment: " + values.title,
-        message: `${values.subject} assignment for Class ${values.className} is due on ${new Date(values.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}.`,
+        message: `${values.subject} assignment ${targetLabel} is due on ${new Date(values.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}.`,
         type: "info",
         targetRole: "parent",
         createdBy: "staff",
@@ -291,6 +303,9 @@ export default function StaffAssignmentsPage() {
                         section: a.section,
                         dueDate: a.dueDate,
                         academicYear: a.academicYear,
+                        targetType: a.targetType || "class",
+                        targetStudentId: a.targetStudentId || "",
+                        targetStudentName: a.targetStudentName || "",
                       });
                       setEditTarget(a);
                     }}
@@ -327,6 +342,9 @@ export default function StaffAssignmentsPage() {
                         section: a.section,
                         dueDate: a.dueDate,
                         academicYear: a.academicYear,
+                        targetType: a.targetType || "class",
+                        targetStudentId: a.targetStudentId || "",
+                        targetStudentName: a.targetStudentName || "",
                       });
                       setEditTarget(a);
                     }}
@@ -495,6 +513,18 @@ function AssignmentCard({
             <p className="text-xs text-gray-500 mt-0.5">
               {a.className} • {a.section}
             </p>
+            {a.targetType === "student" && a.targetStudentName && (
+              <span className="inline-flex items-center gap-1 mt-1 text-xs px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
+                <User className="w-2.5 h-2.5" />
+                {a.targetStudentName}
+              </span>
+            )}
+            {(!a.targetType || a.targetType === "class") && (
+              <span className="inline-flex items-center gap-1 mt-1 text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full border border-gray-200">
+                <Users className="w-2.5 h-2.5" />
+                Whole class
+              </span>
+            )}
           </div>
           <span
             className={`text-xs px-2 py-0.5 rounded-full border flex-shrink-0 ${getSubjectColor(a.subject)}`}
@@ -561,6 +591,24 @@ function AssignmentForm({
 }) {
   const { register, formState: { errors }, watch, setValue } = form;
   const dueDate = watch("dueDate");
+  const targetType = watch("targetType") || "class";
+  const selectedClass = watch("className");
+
+  const [students, setStudents] = useState<{ _id: string; name: string }[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
+  useEffect(() => {
+    if (targetType === "student" && selectedClass) {
+      setLoadingStudents(true);
+      fetch(`/api/students?className=${encodeURIComponent(selectedClass)}&limit=100`)
+        .then((r) => r.json())
+        .then((json) => {
+          if (json.success) setStudents(json.data.map((s: { _id: string; name: string }) => ({ _id: s._id, name: s.name })));
+        })
+        .catch(() => {})
+        .finally(() => setLoadingStudents(false));
+    }
+  }, [targetType, selectedClass]);
 
   return (
     <div className="space-y-4">
@@ -570,6 +618,39 @@ function AssignmentForm({
           {formError}
         </div>
       )}
+
+      {/* Target Type toggle */}
+      <div>
+        <label className="text-xs font-medium text-gray-600 block mb-2">Assign To *</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={submitting || editMode}
+            onClick={() => { setValue("targetType", "class"); setValue("targetStudentId", ""); setValue("targetStudentName", ""); }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
+              targetType === "class"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+            } disabled:opacity-60`}
+          >
+            <Users className="w-4 h-4" />
+            Whole Class
+          </button>
+          <button
+            type="button"
+            disabled={submitting || editMode}
+            onClick={() => setValue("targetType", "student")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
+              targetType === "student"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+            } disabled:opacity-60`}
+          >
+            <User className="w-4 h-4" />
+            Specific Student
+          </button>
+        </div>
+      </div>
 
       <div>
         <label className="text-xs font-medium text-gray-600 block mb-1">Title *</label>
@@ -596,7 +677,7 @@ function AssignmentForm({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Class picker — shows all school grades; disabled in edit mode */}
+        {/* Class picker */}
         <div>
           <label className="text-xs font-medium text-gray-600 block mb-1">Class *</label>
           <select
@@ -614,7 +695,7 @@ function AssignmentForm({
           )}
         </div>
 
-        {/* Subject — free text; any teacher types the subject they teach */}
+        {/* Subject */}
         <div>
           <label className="text-xs font-medium text-gray-600 block mb-1">Subject *</label>
           <Input
@@ -655,6 +736,37 @@ function AssignmentForm({
           )}
         </div>
       </div>
+
+      {/* Student picker (conditional) */}
+      {targetType === "student" && (
+        <div>
+          <label className="text-xs font-medium text-gray-600 block mb-1">
+            Select Student *
+            {!selectedClass && <span className="text-gray-400 ml-1">(select a class first)</span>}
+          </label>
+          {loadingStudents ? (
+            <div className="flex items-center gap-2 text-xs text-gray-500 py-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />Loading students…
+            </div>
+          ) : (
+            <select
+              value={watch("targetStudentId") || ""}
+              onChange={(e) => {
+                const selected = students.find((s) => s._id === e.target.value);
+                setValue("targetStudentId", e.target.value);
+                setValue("targetStudentName", selected?.name || "");
+              }}
+              disabled={submitting || !selectedClass || editMode}
+              className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-100"
+            >
+              <option value="">Select a student</option>
+              {students.map((s) => (
+                <option key={s._id} value={s._id}>{s.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
     </div>
   );
 }

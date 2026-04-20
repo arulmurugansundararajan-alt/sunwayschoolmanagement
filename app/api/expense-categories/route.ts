@@ -3,12 +3,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import ExpenseCategoryModel, { PREDEFINED_CATEGORIES } from "@/models/ExpenseCategory";
+import { getStaffRole } from "@/lib/staffAccess";
 
-// GET /api/expense-categories — get all active categories (admin only)
+/** Returns true if the session belongs to admin OR an accountant staff member */
+async function canAccessCategories(): Promise<boolean> {
+  const session = await getServerSession(authOptions);
+  if (!session) return false;
+  const role = (session.user as { role?: string }).role;
+  if (role === "admin") return true;
+  if (role === "staff") {
+    const staffRole = await getStaffRole();
+    return staffRole === "accountant";
+  }
+  return false;
+}
+
+// GET /api/expense-categories — get all active categories (admin + accountant)
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as { role?: string }).role !== "admin") {
+    if (!(await canAccessCategories())) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -51,11 +64,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/expense-categories — create custom category (admin only)
+// POST /api/expense-categories — create custom category (admin + accountant)
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as { role?: string }).role !== "admin") {
+    if (!(await canAccessCategories())) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 

@@ -3,15 +3,26 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import FeeModel from "@/models/Fee";
+import { getStaffRole } from "@/lib/staffAccess";
+
+async function checkFeeAccess() {
+  const session = await getServerSession(authOptions);
+  if (!session) return { ok: false, isAccountant: false };
+  const role = (session.user as { role?: string }).role;
+  if (role === "admin") return { ok: true, isAccountant: false };
+  if (role === "staff") {
+    const staffRole = await getStaffRole();
+    if (staffRole === "accountant") return { ok: true, isAccountant: true };
+  }
+  return { ok: false, isAccountant: false };
+}
 
 // GET /api/fees/[id]
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
+    const { ok } = await checkFeeAccess();
+    if (!ok) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     await connectDB();
     const fee = await FeeModel.findById(id).lean();
     if (!fee) return NextResponse.json({ success: false, message: "Fee not found" }, { status: 404 });
@@ -23,21 +34,25 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 // PUT /api/fees/[id] — update fee or record a payment
+// Admin: full update + fee collection
+// Accountant: can update status/remarks only — CANNOT collect fees
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
+    const { ok, isAccountant } = await checkFeeAccess();
+    if (!ok) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+
     await connectDB();
 
     const body = await request.json();
     const fee = await FeeModel.findById(id);
     if (!fee) return NextResponse.json({ success: false, message: "Fee not found" }, { status: 404 });
 
-    // Payment collection
+    // Payment collection — admin only
     if (body.collectPayment) {
+      if (isAccountant) {
+        return NextResponse.json({ success: false, message: "Accountants cannot collect fees" }, { status: 403 });
+      }
       const { paidAmount, paymentMethod, paidDate, remarks } = body;
       const newPaid = (fee.paidAmount || 0) + Number(paidAmount);
       fee.paidAmount = newPaid;
@@ -47,7 +62,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
       if (newPaid >= fee.amount) {
         fee.status = "Paid";
-        // Generate receipt number: RCP-YYYY-XXXXXX
         if (!fee.receiptNumber) {
           const year = new Date().getFullYear();
           const count = await FeeModel.countDocuments({ receiptNumber: { $exists: true, $ne: null } });
@@ -60,8 +74,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: true, data: fee });
     }
 
-    // General update (due date, amount, remarks, etc.)
-    const allowed = ["feeType", "amount", "dueDate", "academicYear", "remarks"];
+    // General update
+    // Accountant can only update: dueDate, remarks (no amount/feeType changes)
+    const allowedAdmin = ["feeType", "amount", "dueDate", "academicYear", "remarks"];
+    const allowedAccountant = ["dueDate", "remarks"];
+    const allowed = isAccountant ? allowedAccountant : allowedAdmin;
+
     for (const key of allowed) {
       if (body[key] !== undefined) {
         if (key === "dueDate") {
@@ -72,7 +90,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    // Re-evaluate status if amount changed
     const now = new Date();
     if (fee.paidAmount >= fee.amount) {
       fee.status = "Paid";
@@ -92,12 +109,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-// DELETE /api/fees/[id]
+// DELETE /api/fees/[id] — admin only
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || (session.user as { role?: string }).role !== "admin") {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
     await connectDB();

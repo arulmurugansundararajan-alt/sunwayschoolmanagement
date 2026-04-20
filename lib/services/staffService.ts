@@ -31,6 +31,7 @@ export interface StaffFormData {
   gender: "Male" | "Female" | "Other";
   address: string;
   teacherType?: "class_teacher" | "subject_teacher" | "both";
+  staffRole?: "teacher" | "accountant";
   createLoginAccount?: boolean;
 }
 

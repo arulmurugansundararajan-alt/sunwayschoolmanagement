@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: "admin" | "staff" | "parent" | "student";
+  staffRole?: string; // fine-grained role for staff: teacher | accountant | admin_staff | librarian | counselor | coordinator
   phone?: string;
   avatar?: string;
   isActive: boolean;
@@ -18,6 +19,7 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ["admin", "staff", "parent", "student"], required: true },
+    staffRole: { type: String, default: undefined },
     phone: { type: String },
     avatar: { type: String },
     isActive: { type: Boolean, default: true },

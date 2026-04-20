@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
       subjects, classes, classTeacherClasses, subjectTeacherClasses,
       qualifications, experience,
       salary, dateOfJoining, gender, address, createLoginAccount, teacherType,
+      staffRole,
     } = body;
 
     // Validate required fields
@@ -123,6 +124,7 @@ export async function POST(req: NextRequest) {
         email: loginEmail,
         password: loginPassword,
         role: "staff",
+        staffRole: staffRole || "teacher",
         phone,
         isActive: true,
       });
@@ -148,6 +150,7 @@ export async function POST(req: NextRequest) {
       gender,
       address: address || "",
       teacherType: teacherType || "class_teacher",
+      staffRole: staffRole || "teacher",
       userId,
       isActive: true,
     });

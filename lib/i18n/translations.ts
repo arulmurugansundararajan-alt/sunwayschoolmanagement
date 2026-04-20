@@ -1,0 +1,98 @@
+export type Lang = "en" | "ta";
+
+export const translations = {
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  dashboard:       { en: "Dashboard",        ta: "டாஷ்போர்டு" },
+  students:        { en: "Students",         ta: "மாணவர்கள்" },
+  staff:           { en: "Staff",            ta: "பணியாளர்கள்" },
+  feeManagement:   { en: "Fee Management",   ta: "கட்டண மேலாண்மை" },
+  expenses:        { en: "Expenses",         ta: "செலவுகள்" },
+  events:          { en: "Events & Calendar", ta: "நிகழ்வுகள் & நாட்காட்டி" },
+  announcements:   { en: "Announcements",    ta: "அறிவிப்புகள்" },
+  reports:         { en: "Reports",          ta: "அறிக்கைகள்" },
+  myClasses:       { en: "My Classes",       ta: "என் வகுப்புகள்" },
+  attendance:      { en: "Attendance",       ta: "வருகை" },
+  marksEntry:      { en: "Marks Entry",      ta: "மதிப்பெண் பதிவு" },
+  assignments:     { en: "Assignments",      ta: "பணிகள்" },
+  calendar:        { en: "Calendar",         ta: "நாட்காட்டி" },
+  homework:        { en: "Homework",         ta: "வீட்டுப்பாடம்" },
+  performance:     { en: "Performance",      ta: "செயல்திறன்" },
+  reportCard:      { en: "Report Card",      ta: "மதிப்பெண் அட்டை" },
+  fees:            { en: "Fees",             ta: "கட்டணம்" },
+  messages:        { en: "Messages",         ta: "செய்திகள்" },
+
+  // ── Auth ────────────────────────────────────────────────────────────────────
+  signIn:          { en: "Sign In",          ta: "உள்நுழைக" },
+  signOut:         { en: "Sign Out",         ta: "வெளியேறு" },
+  email:           { en: "Email",            ta: "மின்னஞ்சல்" },
+  password:        { en: "Password",         ta: "கடவுச்சொல்" },
+  yourSchool:      { en: "Your School",      ta: "உங்கள் பள்ளி" },
+
+  // ── Forms ───────────────────────────────────────────────────────────────────
+  name:            { en: "Name",             ta: "பெயர்" },
+  phone:           { en: "Phone",            ta: "தொலைபேசி" },
+  gender:          { en: "Gender",           ta: "பாலினம்" },
+  male:            { en: "Male",             ta: "ஆண்" },
+  female:          { en: "Female",           ta: "பெண்" },
+  other:           { en: "Other",            ta: "மற்றவர்" },
+  address:         { en: "Address",          ta: "முகவரி" },
+  dateOfBirth:     { en: "Date of Birth",    ta: "பிறந்த தேதி" },
+  admissionDate:   { en: "Admission Date",   ta: "சேர்க்கை தேதி" },
+  className:       { en: "Class",            ta: "வகுப்பு" },
+  section:         { en: "Section",          ta: "பிரிவு" },
+  parentName:      { en: "Parent Name",      ta: "பெற்றோர் பெயர்" },
+  parentPhone:     { en: "Parent Phone",     ta: "பெற்றோர் தொலைபேசி" },
+  subject:         { en: "Subject",          ta: "பாடம்" },
+  designation:     { en: "Designation",      ta: "பதவி" },
+  department:      { en: "Department",       ta: "துறை" },
+  save:            { en: "Save",             ta: "சேமி" },
+  cancel:          { en: "Cancel",           ta: "ரத்து" },
+  delete:          { en: "Delete",           ta: "நீக்கு" },
+  edit:            { en: "Edit",             ta: "திருத்து" },
+  add:             { en: "Add",              ta: "சேர்" },
+  search:          { en: "Search",           ta: "தேடு" },
+  close:           { en: "Close",            ta: "மூடு" },
+  back:            { en: "Back",             ta: "பின்" },
+  next:            { en: "Next",             ta: "அடுத்து" },
+  submit:          { en: "Submit",           ta: "சமர்ப்பி" },
+  loading:         { en: "Loading…",         ta: "ஏற்றுகிறது…" },
+
+  // ── Fee module ──────────────────────────────────────────────────────────────
+  feeType:         { en: "Fee Type",         ta: "கட்டண வகை" },
+  amount:          { en: "Amount",           ta: "தொகை" },
+  paidAmount:      { en: "Paid Amount",      ta: "செலுத்திய தொகை" },
+  dueDate:         { en: "Due Date",         ta: "கடைசி தேதி" },
+  status:          { en: "Status",           ta: "நிலை" },
+  paid:            { en: "Paid",             ta: "செலுத்தப்பட்டது" },
+  pending:         { en: "Pending",          ta: "நிலுவை" },
+  overdue:         { en: "Overdue",          ta: "தாமதம்" },
+  partial:         { en: "Partial",          ta: "பகுதி" },
+  collectPayment:  { en: "Collect Payment",  ta: "கட்டணம் பெறு" },
+  receiptNumber:   { en: "Receipt No.",      ta: "ரசீது எண்" },
+
+  // ── General ─────────────────────────────────────────────────────────────────
+  role:            { en: "Role",             ta: "பங்கு" },
+  teacher:         { en: "Teacher",          ta: "ஆசிரியர்" },
+  accountant:      { en: "Accountant",       ta: "கணக்காளர்" },
+  admin:           { en: "Admin",            ta: "நிர்வாகி" },
+  parent:          { en: "Parent",           ta: "பெற்றோர்" },
+  student:         { en: "Student",          ta: "மாணவர்" },
+  total:           { en: "Total",            ta: "மொத்தம்" },
+  academicYear:    { en: "Academic Year",    ta: "கல்வி ஆண்டு" },
+  noData:          { en: "No data found",    ta: "தரவு இல்லை" },
+  error:           { en: "Error",            ta: "பிழை" },
+  success:         { en: "Success",          ta: "வெற்றி" },
+  confirm:         { en: "Confirm",          ta: "உறுதிப்படுத்து" },
+  remarks:         { en: "Remarks",          ta: "குறிப்புகள்" },
+  description:     { en: "Description",      ta: "விளக்கம்" },
+  date:            { en: "Date",             ta: "தேதி" },
+  active:          { en: "Active",           ta: "செயலில்" },
+  inactive:        { en: "Inactive",         ta: "செயலற்றது" },
+  welcome:         { en: "Welcome",          ta: "வரவேற்கிறோம்" },
+} as const;
+
+export type TranslationKey = keyof typeof translations;
+
+export function t(key: TranslationKey, lang: Lang): string {
+  return translations[key][lang] ?? translations[key].en;
+}

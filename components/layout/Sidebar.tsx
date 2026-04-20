@@ -8,16 +8,17 @@ import { Avatar } from "@/components/ui/avatar";
 import {
   LayoutDashboard, Users, UserCheck, BookOpen, Calendar, DollarSign,
   BarChart3, MessageSquare, Bell, Settings, LogOut, GraduationCap,
-  ClipboardList, FileText, Clock, PlusCircle, Home, Award, ChevronLeft,
-  ChevronRight, Shield, Book, Megaphone, Receipt
+  ClipboardList, FileText, Clock, Home, Award, ChevronLeft,
+  ChevronRight, Shield, Book, Megaphone, Receipt, ShieldCheck
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useNotifications } from "@/components/providers/NotificationContext";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import type { TranslationKey } from "@/lib/i18n/translations";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Admissions", href: "/admin/admissions", icon: PlusCircle },
   { label: "Students", href: "/admin/students", icon: Users },
   { label: "Staff", href: "/admin/staff", icon: UserCheck },
   { label: "Fee Management", href: "/admin/fees", icon: DollarSign },
@@ -25,9 +26,10 @@ const adminNavItems = [
   { label: "Events & Calendar", href: "/admin/events", icon: Calendar },
   { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+  { label: "Role Permissions", href: "/admin/roles", icon: ShieldCheck },
 ];
 
-const staffNavItems = [
+const teacherNavItems = [
   { label: "Dashboard", href: "/staff", icon: LayoutDashboard },
   { label: "My Classes", href: "/staff/classes", icon: BookOpen },
   { label: "Attendance", href: "/staff/attendance", icon: ClipboardList },
@@ -36,6 +38,23 @@ const staffNavItems = [
   { label: "Calendar", href: "/staff/calendar", icon: Calendar },
   { label: "Announcements", href: "/staff/announcements", icon: Megaphone },
 ];
+
+const accountantNavItems = [
+  { label: "Dashboard", href: "/staff", icon: LayoutDashboard },
+  { label: "Fee Management", href: "/staff/fees", icon: DollarSign },
+  { label: "Expenses", href: "/staff/expenses", icon: Receipt },
+  { label: "Calendar", href: "/staff/calendar", icon: Calendar },
+  { label: "Announcements", href: "/staff/announcements", icon: Megaphone },
+];
+
+const otherStaffNavItems = [
+  { label: "Dashboard", href: "/staff", icon: LayoutDashboard },
+  { label: "Calendar", href: "/staff/calendar", icon: Calendar },
+  { label: "Announcements", href: "/staff/announcements", icon: Megaphone },
+];
+
+// Keep legacy staffNavItems as default (teacher)
+const staffNavItems = teacherNavItems;
 
 const parentNavItems = [
   { label: "Dashboard", href: "/parent", icon: Home },
@@ -74,19 +93,50 @@ const roleConfig = {
 
 interface SidebarProps {
   role: "admin" | "staff" | "parent";
+  staffRole?: string;
   hiddenNavItems?: string[];
 }
 
-export default function Sidebar({ role, hiddenNavItems = [] }: SidebarProps) {
+export default function Sidebar({ role, staffRole, hiddenNavItems = [] }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const config = roleConfig[role];
   const { getUnreadCountByCategory } = useNotifications();
   const homeworkBadge = role === "parent" ? getUnreadCountByCategory("homework") : 0;
+
+  const { t } = useLanguage();
+
+  const labelKeyMap: Record<string, TranslationKey> = {
+    "Dashboard": "dashboard",
+    "Students": "students",
+    "Staff": "staff",
+    "Fee Management": "feeManagement",
+    "Expenses": "expenses",
+    "Events & Calendar": "events",
+    "Announcements": "announcements",
+    "Reports": "reports",
+    "My Classes": "myClasses",
+    "Attendance": "attendance",
+    "Marks Entry": "marksEntry",
+    "Assignments": "assignments",
+    "Calendar": "calendar",
+    "Homework": "homework",
+    "Performance": "performance",
+    "Report Card": "reportCard",
+    "Fee Payment": "feeManagement",
+  };
+
+  // Pick staff nav items based on staffRole
+  let baseItems = config.items;
+  if (role === "staff") {
+    if (staffRole === "accountant") baseItems = accountantNavItems;
+    else baseItems = teacherNavItems; // teacher (default)
+  }
+
   const navItems = hiddenNavItems.length
-    ? config.items.filter((item) => !hiddenNavItems.includes(item.href))
-    : config.items;
+    ? baseItems.filter((item) => !hiddenNavItems.includes(item.href))
+    : baseItems;
 
   return (
     <div
@@ -164,7 +214,7 @@ export default function Sidebar({ role, hiddenNavItems = [] }: SidebarProps) {
                   </span>
                 )}
               </div>
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span>{t(labelKeyMap[item.label] as TranslationKey) || item.label}</span>}
               {!collapsed && badge > 0 && (
                 <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
                   {badge > 9 ? "9+" : badge}
@@ -212,7 +262,7 @@ export default function Sidebar({ role, hiddenNavItems = [] }: SidebarProps) {
           title={collapsed ? "Sign Out" : undefined}
         >
           <LogOut className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
-          {!collapsed && <span>Sign Out</span>}
+          {!collapsed && <span>{t("signOut")}</span>}
         </button>
       </div>
     </div>

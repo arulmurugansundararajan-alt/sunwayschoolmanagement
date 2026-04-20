@@ -5,6 +5,7 @@ import connectDB from "@/lib/db";
 import StudentModel from "@/models/Student";
 import FeeModel from "@/models/Fee";
 import UserModel from "@/models/User";
+import { getStaffRole } from "@/lib/staffAccess";
 
 function generateSchoolEmail(name: string, suffix = 0): string {
   const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -20,8 +21,46 @@ function generatePassword(): string {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
+    const isAdmin = session.user.role === "admin";
+    const isStaff = session.user.role === "staff";
+
+    if (!isAdmin && !isStaff) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
+    // Staff (teacher/accountant) get limited search-only access (no fee/parent data)
+    if (isStaff) {
+      const staffRole = await getStaffRole();
+      if (!staffRole) {
+        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+      }
+      await connectDB();
+      const { searchParams } = new URL(request.url);
+      const search = searchParams.get("search") || "";
+      const className = searchParams.get("className") || "";
+      const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
+
+      const filter: Record<string, unknown> = { isActive: true };
+      if (className) filter.className = className;
+      if (search) {
+        filter.$or = [
+          { name: { $regex: search, $options: "i" } },
+          { studentId: { $regex: search, $options: "i" } },
+          { admissionNumber: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const students = await StudentModel.find(filter)
+        .select("_id name studentId className section rollNumber")
+        .sort({ className: 1, rollNumber: 1 })
+        .limit(limit)
+        .lean();
+
+      return NextResponse.json({ success: true, data: students });
     }
 
     await connectDB();

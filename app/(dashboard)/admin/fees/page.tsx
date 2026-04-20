@@ -330,6 +330,7 @@ export default function FeeManagementPage() {
             <Button variant="ghost" size="sm" onClick={openAddModal} className="text-purple-600">Add a fee record</Button>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -405,6 +406,7 @@ export default function FeeManagementPage() {
               })}
             </TableBody>
           </Table>
+          </div>
         )}
 
         {/* Pagination */}
@@ -614,38 +616,47 @@ export default function FeeManagementPage() {
               </Badge>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {formError && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />{formError}
                 </div>
               )}
               {payTarget && (
-                <div className="bg-purple-50 border border-purple-200 p-4 space-y-1">
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 space-y-1.5">
                   <p className="text-sm font-bold text-purple-900">{payTarget.studentName}</p>
-                  <p className="text-xs text-purple-600">{payTarget.feeType} • {payTarget.className} • {payTarget.academicYear}</p>
-                  <div className="flex gap-5 mt-2 text-xs text-gray-700">
-                    <span>Total: <strong>{formatCurrency(payTarget.amount)}</strong></span>
-                    <span>Paid: <strong className="text-emerald-600">{formatCurrency(payTarget.paidAmount)}</strong></span>
-                    <span>Balance: <strong className="text-red-600">{formatCurrency(payTarget.amount - payTarget.paidAmount)}</strong></span>
+                  <p className="text-xs text-purple-600">{payTarget.feeType} — {payTarget.className} · {payTarget.academicYear}</p>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    <div className="bg-white rounded-lg px-3 py-2 text-center border border-purple-100">
+                      <p className="text-[10px] text-gray-400">Total</p>
+                      <p className="text-sm font-bold text-gray-800">{formatCurrency(payTarget.amount)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 py-2 text-center border border-purple-100">
+                      <p className="text-[10px] text-gray-400">Paid</p>
+                      <p className="text-sm font-bold text-emerald-600">{formatCurrency(payTarget.paidAmount)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 py-2 text-center border border-purple-100">
+                      <p className="text-[10px] text-gray-400">Balance</p>
+                      <p className="text-sm font-bold text-red-600">{formatCurrency(payTarget.amount - payTarget.paidAmount)}</p>
+                    </div>
                   </div>
                 </div>
               )}
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Amount (₹) *</label>
-                <div className="flex-1">
-                  <Input {...payForm.register("paidAmount")} type="number" min={1} max={payTarget ? payTarget.amount - payTarget.paidAmount : undefined} disabled={submitting} />
-                  {payForm.formState.errors.paidAmount && <p className="text-xs text-red-500 mt-0.5">{payForm.formState.errors.paidAmount.message}</p>}
-                </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-gray-700">Amount (₹) *</label>
+                <Input {...payForm.register("paidAmount")} type="number" min={1} max={payTarget ? payTarget.amount - payTarget.paidAmount : undefined} disabled={submitting} placeholder="Enter amount collected" />
+                {payForm.formState.errors.paidAmount && <p className="text-xs text-red-500">{payForm.formState.errors.paidAmount.message}</p>}
               </div>
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Method *</label>
-                <select {...payForm.register("paymentMethod")} disabled={submitting}
-                  className="flex-1 h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                  {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <label className="text-xs font-medium text-gray-500 w-24 flex-shrink-0 text-right">Date *</label>
-                <div className="flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Payment Method *</label>
+                  <select {...payForm.register("paymentMethod")} disabled={submitting}
+                    className="w-full h-10 px-3 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700">Payment Date *</label>
                   <DatePicker
                     value={payDateVal}
                     onChange={(e) => payForm.setValue("paidDate", e.target.value, { shouldValidate: true })}
@@ -653,12 +664,12 @@ export default function FeeManagementPage() {
                     minYear={thisYear - 1}
                     maxYear={thisYear}
                   />
-                  {payForm.formState.errors.paidDate && <p className="text-xs text-red-500 mt-0.5">{payForm.formState.errors.paidDate.message}</p>}
+                  {payForm.formState.errors.paidDate && <p className="text-xs text-red-500">{payForm.formState.errors.paidDate.message}</p>}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Remarks</label>
-                <Input {...payForm.register("remarks")} placeholder="Optional note" disabled={submitting} className="flex-1" />
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-gray-700">Remarks (optional)</label>
+                <Input {...payForm.register("remarks")} placeholder="e.g. cheque no. 1234" disabled={submitting} />
               </div>
             </div>
           )}

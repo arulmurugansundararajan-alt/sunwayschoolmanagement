@@ -1,15 +1,22 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { calculateGrade, getGradeColor } from "@/lib/utils";
 import { Grade } from "@/types";
-import { Save, CheckCheck, Award, Loader2 } from "lucide-react";
+import { Save, CheckCheck, Award, Loader2, Settings, Plus, Trash2, X, BookOpen, ClipboardList } from "lucide-react";
 import BarChartComponent from "@/components/charts/BarChartComponent";
-
-const examTypes = ["Unit Test 1", "Unit Test 2", "Mid Term", "Final"];
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogContent,
+  DialogFooter,
+  DialogCloseButton,
+} from "@/components/ui/dialog";
 
 interface ClassInfo {
   name: string;
@@ -31,13 +38,27 @@ interface MarkRecord {
   marksObtained: number;
 }
 
+interface SubjectItem {
+  _id: string;
+  name: string;
+  isDefault: boolean;
+}
+
+interface ExamTypeItem {
+  _id: string;
+  name: string;
+  maxMarks: number;
+  isDefault: boolean;
+}
+
 export default function StaffMarksPage() {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [allStudents, setAllStudents] = useState<StudentInfo[]>([]);
-  const [subjects, setSubjects] = useState<string[]>([]);
+  const [subjectList, setSubjectList] = useState<SubjectItem[]>([]);
+  const [examTypeList, setExamTypeList] = useState<ExamTypeItem[]>([]);
   const [selectedClass, setSelectedClass] = useState<ClassInfo | null>(null);
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedExam, setSelectedExam] = useState(examTypes[0]);
+  const [selectedExam, setSelectedExam] = useState("");
   const [existingMarks, setExistingMarks] = useState<Record<string, number>>({});
   const [marks, setMarks] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -45,22 +66,52 @@ export default function StaffMarksPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMarks, setLoadingMarks] = useState(false);
 
-  // Load staff profile
+  // Manage dialog state
+  const [manageDialog, setManageDialog] = useState<"subjects" | "exam-types" | null>(null);
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemMaxMarks, setNewItemMaxMarks] = useState("100");
+  const [addingItem, setAddingItem] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [manageError, setManageError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Load staff profile + subjects + exam types
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/staff/me", { cache: "no-store" });
-        const json = await res.json();
-        if (json.success) {
-          setClasses(json.data.classSummary);
-          setAllStudents(json.data.students);
-          const subs = json.data.profile.subjects as string[];
-          setSubjects(subs);
-          if (json.data.classSummary.length > 0) {
-            setSelectedClass(json.data.classSummary[0]);
+        const [profileRes, subjectsRes, examTypesRes] = await Promise.all([
+          fetch("/api/staff/me", { cache: "no-store" }),
+          fetch("/api/subjects"),
+          fetch("/api/exam-types"),
+        ]);
+        const [profileJson, subjectsJson, examTypesJson] = await Promise.all([
+          profileRes.json(),
+          subjectsRes.json(),
+          examTypesRes.json(),
+        ]);
+
+        if (profileJson.success) {
+          setClasses(profileJson.data.classSummary);
+          setAllStudents(profileJson.data.students);
+          if (profileJson.data.classSummary.length > 0) {
+            setSelectedClass(profileJson.data.classSummary[0]);
           }
-          if (subs.length > 0) setSelectedSubject(subs[0]);
         }
+
+        if (subjectsJson.success) {
+          setSubjectList(subjectsJson.data);
+          if (subjectsJson.data.length > 0) setSelectedSubject(subjectsJson.data[0].name);
+        }
+
+        if (examTypesJson.success) {
+          setExamTypeList(examTypesJson.data);
+          if (examTypesJson.data.length > 0) setSelectedExam(examTypesJson.data[0].name);
+        }
+
+        // Check if current user is admin
+        const sessionRes = await fetch("/api/auth/session");
+        const sessionJson = await sessionRes.json();
+        setIsAdmin(sessionJson?.user?.role === "admin");
       } catch {
         // silently fail
       } finally {
@@ -147,7 +198,7 @@ export default function StaffMarksPage() {
           subject: selectedSubject,
           examType: selectedExam,
           marksObtained: getMark(s._id),
-          maxMarks: 100,
+          maxMarks: examTypeList.find((et) => et.name === selectedExam)?.maxMarks ?? 100,
           academicYear: `${year}-${year + 1}`,
         }));
 
@@ -161,7 +212,6 @@ export default function StaffMarksPage() {
       const json = await res.json();
       if (json.success) {
         setSaved(true);
-        // Update existingMarks from response
         const map: Record<string, number> = { ...existingMarks };
         json.data.forEach((r: MarkRecord) => {
           map[r.studentId] = r.marksObtained;
@@ -173,6 +223,83 @@ export default function StaffMarksPage() {
       // silently fail
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Manage subjects/exam types
+  const openManage = (type: "subjects" | "exam-types") => {
+    setManageDialog(type);
+    setNewItemName("");
+    setNewItemMaxMarks("100");
+    setManageError("");
+  };
+
+  const handleAddItem = async () => {
+    if (!newItemName.trim()) { setManageError("Name is required"); return; }
+    setAddingItem(true);
+    setManageError("");
+    try {
+      const endpoint = manageDialog === "subjects" ? "/api/subjects" : "/api/exam-types";
+      const body = manageDialog === "subjects"
+        ? { name: newItemName.trim() }
+        : { name: newItemName.trim(), maxMarks: parseInt(newItemMaxMarks) || 100 };
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!json.success) { setManageError(json.message || "Failed to add"); return; }
+
+      if (manageDialog === "subjects") {
+        setSubjectList((prev) => {
+          const without = prev.filter((s) => s._id !== json.data._id);
+          return [...without, json.data].sort((a, b) => a.name.localeCompare(b.name));
+        });
+      } else {
+        setExamTypeList((prev) => {
+          const without = prev.filter((e) => e._id !== json.data._id);
+          return [...without, json.data].sort((a, b) => a.name.localeCompare(b.name));
+        });
+      }
+      setNewItemName("");
+      setNewItemMaxMarks("100");
+    } catch {
+      setManageError("Request failed");
+    } finally {
+      setAddingItem(false);
+    }
+  };
+
+  const handleDeleteItem = async (id: string, name: string) => {
+    if (!isAdmin) return;
+    setDeletingId(id);
+    setManageError("");
+    try {
+      const endpoint = manageDialog === "subjects"
+        ? `/api/subjects/${id}`
+        : `/api/exam-types/${id}`;
+      const res = await fetch(endpoint, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) { setManageError(json.message || "Cannot delete"); setDeletingId(null); return; }
+
+      if (manageDialog === "subjects") {
+        setSubjectList((prev) => prev.filter((s) => s._id !== id));
+        if (selectedSubject === name) {
+          const remaining = subjectList.filter((s) => s._id !== id);
+          if (remaining.length > 0) setSelectedSubject(remaining[0].name);
+        }
+      } else {
+        setExamTypeList((prev) => prev.filter((e) => e._id !== id));
+        if (selectedExam === name) {
+          const remaining = examTypeList.filter((e) => e._id !== id);
+          if (remaining.length > 0) setSelectedExam(remaining[0].name);
+        }
+      }
+    } catch {
+      setManageError("Request failed");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -210,10 +337,11 @@ export default function StaffMarksPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-end">
+            {/* Class buttons */}
             <div>
               <p className="text-xs text-gray-500 mb-1 font-medium">Class</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {classes.map((cls) => (
                   <button
                     key={cls.name}
@@ -233,38 +361,57 @@ export default function StaffMarksPage() {
                 ))}
               </div>
             </div>
+
+            {/* Subject dropdown + manage button */}
             <div>
-              <p className="text-xs text-gray-500 mb-1 font-medium">Subject</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-xs text-gray-500 font-medium">Subject</p>
+                <button
+                  onClick={() => openManage("subjects")}
+                  title="Manage Subjects"
+                  className="text-gray-400 hover:text-emerald-600 transition-colors"
+                >
+                  <Settings className="w-3 h-3" />
+                </button>
+              </div>
               <select
                 value={selectedSubject}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
-                  setMarks({});
-                  setSaved(false);
-                }}
+                onChange={(e) => { setSelectedSubject(e.target.value); setMarks({}); setSaved(false); }}
                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"
               >
-                {subjects.map((s) => (
-                  <option key={s}>{s}</option>
+                {subjectList.map((s) => (
+                  <option key={s._id} value={s.name}>{s.name}</option>
                 ))}
+                {subjectList.length === 0 && <option value="">No subjects</option>}
               </select>
             </div>
+
+            {/* Exam type dropdown + manage button */}
             <div>
-              <p className="text-xs text-gray-500 mb-1 font-medium">Exam</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-xs text-gray-500 font-medium">Exam</p>
+                <button
+                  onClick={() => openManage("exam-types")}
+                  title="Manage Exam Types"
+                  className="text-gray-400 hover:text-emerald-600 transition-colors"
+                >
+                  <Settings className="w-3 h-3" />
+                </button>
+              </div>
               <select
                 value={selectedExam}
-                onChange={(e) => {
-                  setSelectedExam(e.target.value);
-                  setMarks({});
-                  setSaved(false);
-                }}
+                onChange={(e) => { setSelectedExam(e.target.value); setMarks({}); setSaved(false); }}
                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"
               >
-                {examTypes.map((e) => (
-                  <option key={e}>{e}</option>
+                {examTypeList.map((e) => (
+                  <option key={e._id} value={e.name}>
+                    {e.name}{e.maxMarks !== 100 ? ` (/${e.maxMarks})` : ""}
+                  </option>
                 ))}
+                {examTypeList.length === 0 && <option value="">No exam types</option>}
               </select>
             </div>
+
             <div className="ml-auto flex gap-2">
               <Button
                 size="sm"
@@ -326,13 +473,15 @@ export default function StaffMarksPage() {
                           <input
                             type="number"
                             min={0}
-                            max={100}
+                            max={examTypeList.find((et) => et.name === selectedExam)?.maxMarks ?? 100}
                             placeholder="Marks"
                             value={marks[student._id] !== undefined ? marks[student._id] : (m ?? "")}
                             onChange={(e) => handleMark(student._id, e.target.value)}
                             className="w-16 text-center text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                           />
-                          <span className="text-xs text-gray-400">/ 100</span>
+                          <span className="text-xs text-gray-400">
+                            / {examTypeList.find((et) => et.name === selectedExam)?.maxMarks ?? 100}
+                          </span>
                           {grade && (
                             <span className={`text-xs font-bold w-7 text-center px-1.5 py-0.5 rounded-lg ${gc}`}>
                               {grade}
@@ -443,6 +592,115 @@ export default function StaffMarksPage() {
           </div>
         </div>
       </div>
+
+      {/* Manage Subjects / Exam Types Dialog */}
+      <Dialog
+        open={!!manageDialog}
+        onClose={() => setManageDialog(null)}
+        maxWidth="sm"
+      >
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {manageDialog === "subjects" ? (
+              <><BookOpen className="w-4 h-4 text-emerald-600" /> Manage Subjects</>
+            ) : (
+              <><ClipboardList className="w-4 h-4 text-violet-600" /> Manage Exam Types</>
+            )}
+          </DialogTitle>
+          <DialogCloseButton onClose={() => setManageDialog(null)} />
+        </DialogHeader>
+        <DialogContent>
+          <div className="space-y-4">
+            {/* Add new */}
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  placeholder={manageDialog === "subjects" ? "Subject name (e.g. Biology)" : "Exam name (e.g. Quarterly)"}
+                  value={newItemName}
+                  onChange={(e) => { setNewItemName(e.target.value); setManageError(""); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleAddItem(); }}
+                  disabled={addingItem}
+                />
+              </div>
+              {manageDialog === "exam-types" && (
+                <div className="w-24">
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={newItemMaxMarks}
+                    onChange={(e) => setNewItemMaxMarks(e.target.value)}
+                    disabled={addingItem}
+                    min={1}
+                    max={1000}
+                  />
+                </div>
+              )}
+              <Button onClick={handleAddItem} disabled={addingItem || !newItemName.trim()} size="sm" className="gap-1.5">
+                {addingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                Add
+              </Button>
+            </div>
+
+            {manageError && (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {manageError}
+              </p>
+            )}
+
+            {/* List */}
+            <div className="max-h-64 overflow-y-auto space-y-1.5">
+              {(manageDialog === "subjects" ? subjectList : examTypeList).map((item) => (
+                <div
+                  key={item._id}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 bg-gray-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-800">{item.name}</span>
+                    {item.isDefault && (
+                      <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                        default
+                      </span>
+                    )}
+                    {"maxMarks" in item && (item as ExamTypeItem).maxMarks !== 100 && (
+                      <span className="text-xs text-gray-400">
+                        /{(item as ExamTypeItem).maxMarks}
+                      </span>
+                    )}
+                  </div>
+                  {isAdmin ? (
+                    <button
+                      onClick={() => handleDeleteItem(item._id, item.name)}
+                      disabled={deletingId === item._id}
+                      title="Delete"
+                      className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                    >
+                      {deletingId === item._id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  ) : (
+                    <X className="w-3.5 h-3.5 text-transparent" />
+                  )}
+                </div>
+              ))}
+              {(manageDialog === "subjects" ? subjectList : examTypeList).length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">No items yet</p>
+              )}
+            </div>
+
+            {!isAdmin && (
+              <p className="text-xs text-gray-400 text-center">
+                Only admins can delete subjects or exam types.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setManageDialog(null)}>Close</Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

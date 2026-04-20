@@ -80,6 +80,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             role: user.role,
+            staffRole: user.staffRole || undefined,
           };
         } catch {
           // If DB not connected, only demo users work
@@ -93,6 +94,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as { role?: string }).role;
         token.id = user.id;
+        token.staffRole = (user as { staffRole?: string }).staffRole;
       }
       return token;
     },
@@ -100,6 +102,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { id?: string }).id = token.id as string;
+        (session.user as { staffRole?: string }).staffRole = token.staffRole as string | undefined;
       }
       return session;
     },

@@ -37,8 +37,13 @@ export async function GET(req: NextRequest) {
       if (!child) {
         return NextResponse.json({ success: false, message: "Child not found" }, { status: 404 });
       }
-      filter.className = child.className;
-      filter.section = child.section;
+      // Return class-wide assignments + student-specific assignments for this child
+      filter.$or = [
+        { className: child.className, section: child.section, targetType: "class" },
+        { targetStudentId: child._id },
+      ];
+      delete filter.isActive;
+      filter.isActive = true;
     } else if (role === "admin") {
       const className = searchParams.get("className");
       const section = searchParams.get("section");
@@ -66,6 +71,10 @@ export async function GET(req: NextRequest) {
         dueDate: a.dueDate instanceof Date ? a.dueDate.toISOString().split("T")[0] : String(a.dueDate).split("T")[0],
         createdByName: a.createdByName,
         academicYear: a.academicYear,
+        targetType: (a as { targetType?: string }).targetType || "class",
+        targetStudentId: (a as { targetStudentId?: unknown }).targetStudentId ? String((a as { targetStudentId?: unknown }).targetStudentId) : undefined,
+        targetStudentName: (a as { targetStudentName?: string }).targetStudentName,
+        submissionsCount: Array.isArray((a as { submissions?: unknown[] }).submissions) ? (a as { submissions?: unknown[] }).submissions!.length : 0,
         createdAt: (a.createdAt as Date).toISOString(),
       })),
     });
@@ -93,13 +102,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { title, description, subject, className, section, dueDate, academicYear } = body;
+    const { title, description, subject, className, section, dueDate, academicYear,
+      targetType, targetStudentId, targetStudentName } = body;
 
     if (!title || !description || !subject || !className || !section || !dueDate || !academicYear) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
     }
 
-    const assignment = await AssignmentModel.create({
+    const assignmentData: Record<string, unknown> = {
       title: title.trim(),
       description: description.trim(),
       subject: subject.trim(),
@@ -110,7 +120,15 @@ export async function POST(req: NextRequest) {
       createdByName: staff.name,
       academicYear,
       isActive: true,
-    });
+      targetType: targetType === "student" ? "student" : "class",
+    };
+
+    if (targetType === "student" && targetStudentId) {
+      assignmentData.targetStudentId = targetStudentId;
+      if (targetStudentName) assignmentData.targetStudentName = targetStudentName;
+    }
+
+    const assignment = await AssignmentModel.create(assignmentData);
 
     return NextResponse.json({ success: true, data: assignment }, { status: 201 });
   } catch (error) {
