@@ -11,6 +11,7 @@ import {
   Eye, EyeOff, Lock, Mail, Shield,
   Users, UserCheck, ChevronRight,
 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -54,6 +55,7 @@ const demoCredentials = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -128,14 +130,14 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Sunway Global School</h1>
-          <p className="text-sm text-gray-500 mt-1">School Management System</p>
+          <p className="text-sm text-gray-500 mt-1">{t("schoolMgmtSystem")}</p>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome back</h2>
-            <p className="text-gray-500 text-sm">Sign in to access your portal</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{t("welcome")}</h2>
+            <p className="text-gray-500 text-sm">{t("signInPortal")}</p>
           </div>
 
           {/* Demo Credentials */}
@@ -186,7 +188,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email Address
+                {t("emailAddress")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -204,7 +206,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Password
+                {t("password")}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -239,7 +241,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  Sign In
+                  {t("signIn")}
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}

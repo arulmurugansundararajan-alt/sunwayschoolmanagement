@@ -13,6 +13,7 @@ import {
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter, DialogCloseButton,
 } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import AreaChartComponent from "@/components/charts/AreaChartComponent";
 import PieChartComponent from "@/components/charts/PieChartComponent";
 import { feeService, FeeFormData, PaymentData } from "@/lib/services/feeService";
@@ -54,6 +55,7 @@ const thisYear = new Date().getFullYear();
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function FeeManagementPage() {
+  const { t } = useLanguage();
   // Data state
   const [fees, setFees] = useState<Fee[]>([]);
   const [summary, setSummary] = useState({
@@ -221,10 +223,10 @@ export default function FeeManagementPage() {
       {/* ── Stats Row ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label: "Total Collected", value: formatCurrency(summary.totalCollected), icon: CheckCircle2, bg: "from-emerald-500 to-teal-600", sub: `${summary.byStatus.paid} paid in full` },
-          { label: "Total Pending", value: formatCurrency(summary.totalPending), icon: AlertTriangle, bg: "from-amber-500 to-orange-500", sub: `${summary.byStatus.pending + summary.byStatus.partial} outstanding` },
-          { label: "Overdue Amount", value: formatCurrency(summary.totalOverdue), icon: Clock, bg: "from-red-500 to-rose-600", sub: `${summary.byStatus.overdue} overdue records` },
-          { label: "Collection Rate", value: `${summary.collectionRate}%`, icon: TrendingUp, bg: "from-indigo-500 to-purple-600", sub: "Of total billed amount" },
+          { label: t("totalCollected"), value: formatCurrency(summary.totalCollected), icon: CheckCircle2, bg: "from-emerald-500 to-teal-600", sub: `${summary.byStatus.paid} paid in full` },
+          { label: t("totalPending"), value: formatCurrency(summary.totalPending), icon: AlertTriangle, bg: "from-amber-500 to-orange-500", sub: `${summary.byStatus.pending + summary.byStatus.partial} outstanding` },
+          { label: t("overdueAmount"), value: formatCurrency(summary.totalOverdue), icon: Clock, bg: "from-red-500 to-rose-600", sub: `${summary.byStatus.overdue} overdue records` },
+          { label: t("collectionRate"), value: `${summary.collectionRate}%`, icon: TrendingUp, bg: "from-indigo-500 to-purple-600", sub: "Of total billed amount" },
         ].map((s) => (
           <Card key={s.label} className={`bg-gradient-to-br ${s.bg} text-white border-0 shadow-lg`}>
             <CardContent className="p-4">
@@ -285,24 +287,24 @@ export default function FeeManagementPage() {
             />
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white">
-              <option value="">All Status</option>
+              <option value="">{t("allStatus")}</option>
               {["Paid", "Pending", "Partial", "Overdue"].map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white">
-              <option value="">All Classes</option>
+              <option value="">{t("allClasses")}</option>
               {SCHOOL_GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
             <select value={feeTypeFilter} onChange={(e) => setFeeTypeFilter(e.target.value)}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white">
-              <option value="">All Fee Types</option>
+              <option value="">{t("allFeeTypes")}</option>
               {[...new Set([...FEE_TYPES, ...feeTypes])].map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
             <Button size="sm" className="gap-1.5" onClick={openAddModal}>
-              <Plus className="w-4 h-4" /> Add Fee
+              <Plus className="w-4 h-4" /> {t("addFee")}
             </Button>
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => feeService.exportCsv(fees)} disabled={fees.length === 0}>
-              <Download className="w-4 h-4" /> Export
+              <Download className="w-4 h-4" /> {t("exportBtn")}
             </Button>
           </div>
           {!loading && (
@@ -334,14 +336,14 @@ export default function FeeManagementPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Fee Type</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("student")}</TableHead>
+                <TableHead>{t("feeType")}</TableHead>
+                <TableHead>{t("total")}</TableHead>
+                <TableHead>{t("paid")}</TableHead>
+                <TableHead>{t("balance")}</TableHead>
+                <TableHead>{t("dueDate")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

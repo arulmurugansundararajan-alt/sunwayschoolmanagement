@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/components/providers/NotificationContext";
 import { LanguageToggle } from "@/components/shared/LanguageToggle";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface HeaderProps {
   title: string;
@@ -24,6 +25,7 @@ const typeColors = {
 
 export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
   const { data: session } = useSession();
+  const { t } = useLanguage();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,7 +52,7 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Search students, staff..."
+          placeholder={t("searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-64 placeholder:text-gray-400"

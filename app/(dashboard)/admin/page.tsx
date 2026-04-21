@@ -13,6 +13,7 @@ import {
   IndianRupee, UserPlus,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 // Fallback chart data shown while DB is empty
 import {
   enrollmentTrendData, attendanceMonthlyData, feeCollectionData,
@@ -46,6 +47,7 @@ interface Charts {
 }
 
 export default function AdminDashboard() {
+  const { t } = useLanguage();
   const [stats, setStats]               = useState<DashboardStats | null>(null);
   const [recentStudents, setRecent]     = useState<RecentStudent[]>([]);
   const [charts, setCharts]             = useState<Charts>({});
@@ -82,15 +84,15 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      title: "Total Students",
+      title: t("totalStudentsLabel"),
       value: stats?.totalStudents ?? 0,
-      subtitle: "Active students",
+      subtitle: t("activeStudentsLabel"),
       icon: Users,
       gradient: "bg-gradient-to-br from-violet-500 to-purple-700",
       trend: { value: 0, label: "enrolled" },
     },
     {
-      title: "Total Staff",
+      title: t("totalStaffLabel"),
       value: stats?.totalStaff ?? 0,
       subtitle: "Teachers & Accountants",
       icon: UserCheck,
@@ -98,7 +100,7 @@ export default function AdminDashboard() {
       trend: { value: 0, label: "active" },
     },
     {
-      title: "Total Classes",
+      title: t("totalClassesLabel"),
       value: stats?.totalClasses ?? 0,
       subtitle: "Active class groups",
       icon: BookOpen,
@@ -106,7 +108,7 @@ export default function AdminDashboard() {
       trend: { value: 0, label: "sections" },
     },
     {
-      title: "Fee Collected",
+      title: t("feeCollectedLabel"),
       value: formatCurrency(stats?.feeCollectionMonth ?? 0),
       subtitle: "This month",
       icon: DollarSign,
@@ -114,15 +116,15 @@ export default function AdminDashboard() {
       trend: { value: 0, label: "this month" },
     },
     {
-      title: "Today's Attendance",
+      title: t("todayAttendanceLabel"),
       value: `${stats?.attendanceToday ?? 0}%`,
-      subtitle: "Present today",
+      subtitle: t("present"),
       icon: CheckCircle,
       gradient: "bg-gradient-to-br from-cyan-500 to-blue-600",
       trend: { value: 0, label: "today" },
     },
     {
-      title: "Pending Fees",
+      title: t("pendingFeesLabel"),
       value: formatCurrency(stats?.pendingFees ?? 0),
       subtitle: "Outstanding balance",
       icon: AlertTriangle,
@@ -160,7 +162,7 @@ export default function AdminDashboard() {
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-1">Welcome back, Principal! 👋</h2>
+              <h2 className="text-2xl font-bold mb-1">{t("welcomePrincipal")}</h2>
               <p className="text-white/70 text-sm">
                 Academic Year 2025–2026 •{" "}
                 {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}
@@ -207,7 +209,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Student Enrollment Trend</CardTitle>
+                <CardTitle className="text-base">{t("enrollmentTrend")}</CardTitle>
                 <CardDescription>Monthly admissions over the past year</CardDescription>
               </div>
               <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
@@ -230,7 +232,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Monthly Attendance Overview</CardTitle>
+                <CardTitle className="text-base">{t("attendanceOverview")}</CardTitle>
                 <CardDescription>Present vs Absent percentage</CardDescription>
               </div>
               <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center">
@@ -258,7 +260,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Fee Collection Analysis</CardTitle>
+                <CardTitle className="text-base">{t("feeAnalysis")}</CardTitle>
                 <CardDescription>Collected vs Pending (₹)</CardDescription>
               </div>
               <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
@@ -305,7 +307,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Class-wise Strength</CardTitle>
+                <CardTitle className="text-base">{t("classStrengthTitle")}</CardTitle>
                 <CardDescription>Number of students per class</CardDescription>
               </div>
               <div className="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
@@ -328,7 +330,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Grade Distribution</CardTitle>
+                <CardTitle className="text-base">{t("gradeDistribution")}</CardTitle>
                 <CardDescription>Overall academic performance</CardDescription>
               </div>
               <div className="w-9 h-9 bg-rose-50 rounded-xl flex items-center justify-center">
@@ -354,9 +356,9 @@ export default function AdminDashboard() {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent Admissions</CardTitle>
+              <CardTitle className="text-base">{t("recentAdmissions")}</CardTitle>
               <a href="/admin/students" className="text-xs text-indigo-600 font-medium hover:text-indigo-700">
-                View all →
+                {t("viewAll")} →
               </a>
             </div>
           </CardHeader>

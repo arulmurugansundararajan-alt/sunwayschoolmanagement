@@ -18,6 +18,7 @@ import { Staff } from "@/types";
 import { formatDate, getSubjectColor, cn } from "@/lib/utils";
 import { SCHOOL_GRADES } from "@/lib/constants";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
   Search, Plus, Eye, Edit, Trash2, Phone, Mail, Award, Users,
   Loader2, AlertCircle, Building2, BookOpen, CheckCircle2,
@@ -47,6 +48,7 @@ type StaffFormValues = z.infer<typeof staffSchema>;
 
 // ─── Main Page Component ──────────────────────────────────────────────────────
 export default function StaffManagementPage() {
+  const { t } = useLanguage();
   const [staff, setStaff] = useState<Staff[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 1 });
@@ -282,10 +284,10 @@ export default function StaffManagementPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Staff", value: pagination.total, color: "from-indigo-500 to-purple-600", icon: Users },
+          { label: t("totalStaffLabel"), value: pagination.total, color: "from-indigo-500 to-purple-600", icon: Users },
           { label: "Teachers", value: totalTeachers, color: "from-emerald-500 to-teal-600", icon: BookOpen },
           { label: "HODs", value: totalHODs, color: "from-amber-500 to-orange-600", icon: Award },
-          { label: "Departments", value: departments.length, color: "from-blue-500 to-cyan-600", icon: Building2 },
+          { label: t("departmentsLabel"), value: departments.length, color: "from-blue-500 to-cyan-600", icon: Building2 },
         ].map((stat) => (
           <Card key={stat.label} className={`bg-gradient-to-br ${stat.color} text-white border-0 shadow-lg`}>
             <CardContent className="p-4">
@@ -312,7 +314,7 @@ export default function StaffManagementPage() {
               onChange={(e) => { setSelectedDept(e.target.value); setCurrentPage(1); }}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white"
             >
-              <option value="">All Departments</option>
+              <option value="">{t("allDepartments")}</option>
               {departments.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
             <Button
@@ -324,7 +326,7 @@ export default function StaffManagementPage() {
                 addForm.reset({ experience: 0, salary: 0, createLoginAccount: true, gender: "Male" });
               }}
             >
-              <Plus className="w-4 h-4" /> Add Staff
+              <Plus className="w-4 h-4" /> {t("addStaff")}
             </Button>
           </div>
           {!loading && (
@@ -360,14 +362,14 @@ export default function StaffManagementPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Staff Member</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Designation</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Subjects</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Login</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("staffMemberLabel")}</TableHead>
+                <TableHead>{t("idLabel")}</TableHead>
+                <TableHead>{t("designation")}</TableHead>
+                <TableHead>{t("department")}</TableHead>
+                <TableHead>{t("subjectsLabel")}</TableHead>
+                <TableHead>{t("experienceLabel")}</TableHead>
+                <TableHead>{t("loginLabel")}</TableHead>
+                <TableHead>{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

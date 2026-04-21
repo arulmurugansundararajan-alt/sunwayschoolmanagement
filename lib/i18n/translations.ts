@@ -91,6 +91,77 @@ export const translations = {
   welcome:         { en: "Welcome",          ta: "வரவேற்கிறோம்" },
   rolePermissions: { en: "Role Permissions", ta: "பங்கு அனுமதிகள்" },
   feePayment:      { en: "Fee Payment",      ta: "கட்டணம் செலுத்து" },
+
+  // ── Dashboard stat cards ────────────────────────────────────────────────────
+  totalStudentsLabel:  { en: "Total Students",        ta: "மொத்த மாணவர்கள்" },
+  activeStudentsLabel: { en: "Active Students",        ta: "செயலில் உள்ள மாணவர்கள்" },
+  totalStaffLabel:     { en: "Total Staff",            ta: "மொத்த பணியாளர்கள்" },
+  totalClassesLabel:   { en: "Total Classes",          ta: "மொத்த வகுப்புகள்" },
+  feeCollectedLabel:   { en: "Fee Collected",          ta: "வசூலிக்கப்பட்ட கட்டணம்" },
+  todayAttendanceLabel:{ en: "Today's Attendance",     ta: "இன்றைய வருகை" },
+  pendingFeesLabel:    { en: "Pending Fees",            ta: "நிலுவை கட்டணம்" },
+  totalCollected:      { en: "Total Collected",         ta: "மொத்த வசூல்" },
+  totalPending:        { en: "Total Pending",           ta: "மொத்த நிலுவை" },
+  overdueAmount:       { en: "Overdue Amount",          ta: "காலாவதியான தொகை" },
+  collectionRate:      { en: "Collection Rate",         ta: "வசூல் விகிதம்" },
+  departmentsLabel:    { en: "Departments",             ta: "துறைகள்" },
+
+  // ── Chart / section titles ──────────────────────────────────────────────────
+  enrollmentTrend:     { en: "Student Enrollment Trend",      ta: "மாணவர் சேர்க்கை போக்கு" },
+  attendanceOverview:  { en: "Monthly Attendance Overview",   ta: "மாதாந்திர வருகை கண்ணோட்டம்" },
+  feeAnalysis:         { en: "Fee Collection Analysis",       ta: "கட்டண வசூல் பகுப்பாய்வு" },
+  classStrengthTitle:  { en: "Class-wise Strength",           ta: "வகுப்பு வாரியான மாணவர் எண்ணிக்கை" },
+  gradeDistribution:   { en: "Grade Distribution",            ta: "தர விநியோகம்" },
+  recentAdmissions:    { en: "Recent Admissions",             ta: "சமீபத்திய சேர்க்கைகள்" },
+  welcomePrincipal:    { en: "Welcome back, Principal! 👋",   ta: "மீண்டும் வரவேற்கிறோம், முதல்வர்! 👋" },
+
+  // ── Action buttons ──────────────────────────────────────────────────────────
+  addStudent:          { en: "Add Student",     ta: "மாணவரை சேர்" },
+  addStaff:            { en: "Add Staff",        ta: "பணியாளரை சேர்" },
+  addFee:              { en: "Add Fee",          ta: "கட்டணம் சேர்" },
+  exportBtn:           { en: "Export",           ta: "ஏற்றுமதி" },
+  previous:            { en: "Previous",         ta: "முந்தைய" },
+  retry:               { en: "Retry",            ta: "மீண்டும் முயற்சி" },
+  viewAll:             { en: "View all",         ta: "அனைத்தையும் பார்" },
+
+  // ── Filter dropdowns ────────────────────────────────────────────────────────
+  allClasses:          { en: "All Classes",      ta: "அனைத்து வகுப்புகள்" },
+  allDepartments:      { en: "All Departments",  ta: "அனைத்து துறைகள்" },
+  allStatus:           { en: "All Status",       ta: "அனைத்து நிலைகள்" },
+  allFeeTypes:         { en: "All Fee Types",    ta: "அனைத்து கட்டண வகைகள்" },
+
+  // ── Table column headers ────────────────────────────────────────────────────
+  actions:             { en: "Actions",          ta: "செயல்கள்" },
+  idLabel:             { en: "ID",               ta: "அடையாளம்" },
+  balance:             { en: "Balance",          ta: "இருப்பு" },
+  parentLoginLabel:    { en: "Parent Login",     ta: "பெற்றோர் உள்நுழைவு" },
+  feeStatusLabel:      { en: "Fee Status",       ta: "கட்டண நிலை" },
+  staffMemberLabel:    { en: "Staff Member",     ta: "பணியாளர்" },
+  experienceLabel:     { en: "Experience",       ta: "அனுபவம்" },
+  loginLabel:          { en: "Login",            ta: "உள்நுழைவு" },
+  subjectsLabel:       { en: "Subjects",         ta: "பாடங்கள்" },
+
+  // ── Modal sections ──────────────────────────────────────────────────────────
+  studentDetails:      { en: "Student Details",      ta: "மாணவர் விவரங்கள்" },
+  personalInfo:        { en: "Personal Info",         ta: "தனிப்பட்ட தகவல்" },
+  parentInfo:          { en: "Parent Info",           ta: "பெற்றோர் தகவல்" },
+  attendanceSummary:   { en: "Attendance Summary",    ta: "வருகை சுருக்கம்" },
+  feeRecordsLabel:     { en: "Fee Records",           ta: "கட்டண பதிவுகள்" },
+
+  // ── Attendance breakdown ────────────────────────────────────────────────────
+  present:             { en: "Present",          ta: "வருகை" },
+  absent:              { en: "Absent",           ta: "வருகையின்மை" },
+  totalDays:           { en: "Total Days",       ta: "மொத்த நாட்கள்" },
+  percentage:          { en: "Percentage",       ta: "சதவீதம்" },
+
+  // ── Header / Search ─────────────────────────────────────────────────────────
+  searchPlaceholder:   { en: "Search students, staff...", ta: "மாணவர்கள், பணியாளர்களை தேடுக..." },
+
+  // ── Auth / Login page ───────────────────────────────────────────────────────
+  schoolMgmtSystem:    { en: "School Management System",          ta: "பள்ளி நிர்வாக அமைப்பு" },
+  signInPortal:        { en: "Sign in to access your portal",     ta: "உங்கள் போர்டலை அணுக உள்நுழைக" },
+  emailAddress:        { en: "Email Address",                     ta: "மின்னஞ்சல் முகவரி" },
+  paymentMethodLabel:  { en: "Payment Method",                    ta: "கட்டண முறை" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

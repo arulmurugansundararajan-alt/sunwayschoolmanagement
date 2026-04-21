@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Avatar } from "@/components/ui/avatar";
 import {
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter, DialogCloseButton,
@@ -46,6 +47,7 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function StudentsPage() {
+  const { t } = useLanguage();
   // List state
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
@@ -264,7 +266,7 @@ export default function StudentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-indigo-700">{loading ? "—" : stats.total}</p>
-              <p className="text-xs text-gray-600">Total Students</p>
+              <p className="text-xs text-gray-600">{t("totalStudentsLabel")}</p>
             </div>
           </CardContent>
         </Card>
@@ -275,7 +277,7 @@ export default function StudentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-emerald-700">{loading ? "—" : stats.active}</p>
-              <p className="text-xs text-gray-600">Active Students</p>
+              <p className="text-xs text-gray-600">{t("activeStudentsLabel")}</p>
             </div>
           </CardContent>
         </Card>
@@ -286,7 +288,7 @@ export default function StudentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-amber-700">{loading ? "—" : stats.pendingFees}</p>
-              <p className="text-xs text-gray-600">Pending Fees</p>
+              <p className="text-xs text-gray-600">{t("pendingFeesLabel")}</p>
             </div>
           </CardContent>
         </Card>
@@ -308,7 +310,7 @@ export default function StudentsPage() {
               onChange={(e) => { setSelectedClass(e.target.value); setCurrentPage(1); }}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white min-w-[150px]"
             >
-              <option value="">All Classes</option>
+              <option value="">{t("allClasses")}</option>
               {classes.map((c) => <option key={c} value={c}>Class {c}</option>)}
             </select>
             <Button
@@ -320,7 +322,7 @@ export default function StudentsPage() {
                 addForm.reset({ gender: "Male", admissionDate: new Date().toISOString().slice(0, 10) });
               }}
             >
-              <Plus className="w-4 h-4" /> Add Student
+              <Plus className="w-4 h-4" /> {t("addStudent")}
             </Button>
             <Button
               variant="outline"
@@ -329,7 +331,7 @@ export default function StudentsPage() {
               onClick={() => studentService.exportCsv(students)}
               disabled={students.length === 0}
             >
-              <Download className="w-4 h-4" /> Export
+              <Download className="w-4 h-4" /> {t("exportBtn")}
             </Button>
           </div>
           {!loading && (
@@ -365,15 +367,15 @@ export default function StudentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Parent</TableHead>
-                <TableHead>Attendance</TableHead>
-                <TableHead>Fee Status</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Parent Login</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("student")}</TableHead>
+                <TableHead>{t("idLabel")}</TableHead>
+                <TableHead>{t("className")}</TableHead>
+                <TableHead>{t("parent")}</TableHead>
+                <TableHead>{t("attendance")}</TableHead>
+                <TableHead>{t("feeStatusLabel")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("parentLoginLabel")}</TableHead>
+                <TableHead>{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -485,7 +487,7 @@ export default function StudentsPage() {
             <p className="text-xs text-gray-500">Page {pagination.page} of {pagination.totalPages}</p>
             <div className="flex gap-1.5">
               <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>
-                Previous
+                {t("previous")}
               </Button>
               {pageNums.map((p) => (
                 <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm"
@@ -494,7 +496,7 @@ export default function StudentsPage() {
                 </Button>
               ))}
               <Button variant="outline" size="sm" disabled={currentPage >= pagination.totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
-                Next
+                {t("next")}
               </Button>
             </div>
           </div>
@@ -505,7 +507,7 @@ export default function StudentsPage() {
       {viewStudent && (
         <Dialog open onClose={() => setViewStudent(null)} maxWidth="xl">
           <DialogHeader>
-            <DialogTitle>Student Details</DialogTitle>
+            <DialogTitle>{t("studentDetails")}</DialogTitle>
             <DialogCloseButton onClose={() => setViewStudent(null)} />
           </DialogHeader>
           <DialogContent>
@@ -526,7 +528,7 @@ export default function StudentsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Personal Info</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">{t("personalInfo")}</h4>
                   <div className="space-y-2 text-sm">
                     {[
                       { label: "Date of Birth", value: viewStudent.dateOfBirth ? formatDate(viewStudent.dateOfBirth) : "—" },
@@ -542,7 +544,7 @@ export default function StudentsPage() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Parent Info</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">{t("parentInfo")}</h4>
                   <div className="space-y-2 text-sm">
                     {[
                       { label: "Parent Name", value: viewStudent.parentName },
@@ -560,13 +562,13 @@ export default function StudentsPage() {
 
               {viewStudent.attendance && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Attendance Summary</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">{t("attendanceSummary")}</h4>
                   <div className="grid grid-cols-4 gap-3">
                     {[
-                      { label: "Total Days", value: viewStudent.attendance.totalDays, color: "bg-blue-50 text-blue-700" },
-                      { label: "Present", value: viewStudent.attendance.presentDays, color: "bg-emerald-50 text-emerald-700" },
-                      { label: "Absent", value: viewStudent.attendance.absentDays, color: "bg-red-50 text-red-700" },
-                      { label: "Percentage", value: `${viewStudent.attendance.percentage}%`, color: "bg-purple-50 text-purple-700" },
+                      { label: t("totalDays"), value: viewStudent.attendance.totalDays, color: "bg-blue-50 text-blue-700" },
+                      { label: t("present"), value: viewStudent.attendance.presentDays, color: "bg-emerald-50 text-emerald-700" },
+                      { label: t("absent"), value: viewStudent.attendance.absentDays, color: "bg-red-50 text-red-700" },
+                      { label: t("percentage"), value: `${viewStudent.attendance.percentage}%`, color: "bg-purple-50 text-purple-700" },
                     ].map((item) => (
                       <div key={item.label} className={`${item.color} rounded-xl p-3 text-center`}>
                         <p className="text-xl font-bold">{item.value}</p>
@@ -579,7 +581,7 @@ export default function StudentsPage() {
 
               {viewStudent.fees && viewStudent.fees.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Fee Records</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">{t("feeRecordsLabel")}</h4>
                   <div className="space-y-2">
                     {viewStudent.fees.map((fee) => (
                       <div key={fee._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
