@@ -125,6 +125,7 @@ export default function Sidebar({ role, staffRole, hiddenNavItems = [] }: Sideba
     "Performance": "performance",
     "Report Card": "reportCard",
     "Fee Payment": "feeManagement",
+    "Role Permissions": "rolePermissions",
   };
 
   // Pick staff nav items based on staffRole
@@ -214,7 +215,7 @@ export default function Sidebar({ role, staffRole, hiddenNavItems = [] }: Sideba
                   </span>
                 )}
               </div>
-              {!collapsed && <span>{t(labelKeyMap[item.label] as TranslationKey) || item.label}</span>}
+              {!collapsed && <span>{labelKeyMap[item.label] ? t(labelKeyMap[item.label] as TranslationKey) : item.label}</span>}
               {!collapsed && badge > 0 && (
                 <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
                   {badge > 9 ? "9+" : badge}

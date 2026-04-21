@@ -89,6 +89,8 @@ export const translations = {
   active:          { en: "Active",           ta: "செயலில்" },
   inactive:        { en: "Inactive",         ta: "செயலற்றது" },
   welcome:         { en: "Welcome",          ta: "வரவேற்கிறோம்" },
+  rolePermissions: { en: "Role Permissions", ta: "பங்கு அனுமதிகள்" },
+  feePayment:      { en: "Fee Payment",      ta: "கட்டணம் செலுத்து" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
