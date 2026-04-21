@@ -66,9 +66,12 @@ function generateSchoolEmail(name: string, suffix = 0): string {
   return suffix === 0 ? `${base}@sunwayschooledu.in` : `${base}${suffix}@sunwayschooledu.in`;
 }
 
-function generatePassword(): string {
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#";
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+function generateDefaultPassword(name: string, dateOfJoining: string): string {
+  const first4 = name.split(" ")[0].toLowerCase().replace(/[^a-z]/g, "").slice(0, 4).padEnd(4, "x");
+  const doj = new Date(dateOfJoining);
+  const dd = String(doj.getDate()).padStart(2, "0");
+  const mm = String(doj.getMonth() + 1).padStart(2, "0");
+  return `${first4}@${dd}${mm}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -117,7 +120,7 @@ export async function POST(req: NextRequest) {
         candidate = generateSchoolEmail(name, suffix++);
       }
       loginEmail = candidate;
-      loginPassword = generatePassword();
+      loginPassword = generateDefaultPassword(name, dateOfJoining);
       // Pass plain password — User model's pre-save hook will hash it
       const user = await User.create({
         name,

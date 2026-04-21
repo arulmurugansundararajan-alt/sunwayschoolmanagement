@@ -1020,10 +1020,12 @@ function StaffFormFields({
             <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Qualifications</label>
             <Input {...register("qualifications")} placeholder="e.g. M.Sc Mathematics, B.Ed" disabled={submitting} className="flex-1" />
           </div>
+          {watch("staffRole") !== "accountant" && (
           <div className="flex items-center gap-3">
             <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Subjects</label>
             <Input {...register("subjectsRaw")} placeholder="e.g. Mathematics, Physics" disabled={submitting} className="flex-1" />
           </div>
+          )}
           <div className="flex items-center gap-3">
             <label className="text-xs font-medium text-gray-500 w-32 flex-shrink-0 text-right">Address</label>
             <Input {...register("address")} placeholder="Residential address" disabled={submitting} className="flex-1" />
@@ -1034,6 +1036,14 @@ function StaffFormFields({
       {/* Step 3 - Role & Classes */}
       {step === 3 && (
         <div className="space-y-5">
+          {watch("staffRole") === "accountant" ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center gap-3 bg-amber-50 border border-amber-100 rounded-xl">
+              <div className="text-4xl">💰</div>
+              <p className="text-sm font-semibold text-gray-700">Accountant Role Selected</p>
+              <p className="text-xs text-gray-500 max-w-xs">Class and subject assignments are not applicable for Accountant staff. You may proceed to save this staff member.</p>
+            </div>
+          ) : (
+            <>
           {/* Class Teacher Section */}
           <div>
             <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
@@ -1099,6 +1109,8 @@ function StaffFormFields({
                 </span>
               </p>
             </div>
+          )}
+            </>
           )}
 
           {showLoginOption && (

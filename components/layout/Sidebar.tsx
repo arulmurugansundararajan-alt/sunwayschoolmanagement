@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, UserCheck, BookOpen, Calendar, DollarSign,
   BarChart3, MessageSquare, Bell, Settings, LogOut, GraduationCap,
   ClipboardList, FileText, Clock, Home, Award, ChevronLeft,
-  ChevronRight, Shield, Book, Megaphone, Receipt, ShieldCheck
+  ChevronRight, Shield, Book, Megaphone, Receipt
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -26,7 +26,6 @@ const adminNavItems = [
   { label: "Events & Calendar", href: "/admin/events", icon: Calendar },
   { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
-  { label: "Role Permissions", href: "/admin/roles", icon: ShieldCheck },
 ];
 
 const teacherNavItems = [
@@ -125,7 +124,6 @@ export default function Sidebar({ role, staffRole, hiddenNavItems = [] }: Sideba
     "Performance": "performance",
     "Report Card": "reportCard",
     "Fee Payment": "feeManagement",
-    "Role Permissions": "rolePermissions",
   };
 
   // Pick staff nav items based on staffRole

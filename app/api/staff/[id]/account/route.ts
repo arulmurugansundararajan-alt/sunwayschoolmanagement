@@ -6,11 +6,26 @@ import StaffModel from "@/models/Staff";
 import User from "@/models/User";
 import crypto from "crypto";
 
-// Generate a readable random password: firstname + @ + 4 random digits
-function generatePassword(name: string): string {
-  const firstName = name.split(" ")[0].toLowerCase().replace(/[^a-z]/g, "");
+// Generate school email from name
+function generateSchoolEmail(name: string, suffix = 0): string {
+  const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return suffix === 0 ? `${base}@sunwayschooledu.in` : `${base}${suffix}@sunwayschooledu.in`;
+}
+
+// Default password for new accounts: first4letters@DDMM (date of joining)
+function generateDefaultPassword(name: string, dateOfJoining: Date | string): string {
+  const first4 = name.split(" ")[0].toLowerCase().replace(/[^a-z]/g, "").slice(0, 4).padEnd(4, "x");
+  const doj = new Date(dateOfJoining);
+  const dd = String(doj.getDate()).padStart(2, "0");
+  const mm = String(doj.getMonth() + 1).padStart(2, "0");
+  return `${first4}@${dd}${mm}`;
+}
+
+// Reset password: first4letters@<4 random digits>
+function generateResetPassword(name: string): string {
+  const first4 = name.split(" ")[0].toLowerCase().replace(/[^a-z]/g, "").slice(0, 4).padEnd(4, "x");
   const digits = crypto.randomInt(1000, 9999);
-  return `${firstName}@${digits}`;
+  return `${first4}@${digits}`;
 }
 
 // POST /api/staff/[id]/account — create login account for staff
@@ -40,15 +55,20 @@ export async function POST(
       }
     }
 
-    // Check if email already used by another user
-    const existingUserByEmail = await User.findOne({ email: staff.email });
+    // Generate unique school email from name
+    let schoolEmail = generateSchoolEmail(staff.name);
+    let suffix = 1;
+    while (await User.findOne({ email: schoolEmail })) {
+      schoolEmail = generateSchoolEmail(staff.name, suffix++);
+    }
+
+    // Check if a staff user with this school email already exists and can be relinked
+    const existingUserByEmail = await User.findOne({ email: schoolEmail });
     if (existingUserByEmail) {
-      // If this user has role "staff" and isn't linked to anyone else, link it
       if (existingUserByEmail.role === "staff") {
         const linkedToOther = await StaffModel.findOne({ userId: existingUserByEmail._id, _id: { $ne: staff._id } });
         if (!linkedToOther) {
-          // Re-activate if deactivated, generate new password, and link
-          const plainPassword = generatePassword(staff.name);
+          const plainPassword = generateDefaultPassword(staff.name, staff.dateOfJoining);
           existingUserByEmail.password = plainPassword;
           existingUserByEmail.isActive = true;
           existingUserByEmail.name = staff.name;
@@ -60,7 +80,7 @@ export async function POST(
           return NextResponse.json({
             success: true,
             data: {
-              email: staff.email,
+              email: schoolEmail,
               password: plainPassword,
               staffName: staff.name,
               staffId: staff.staffId,
@@ -73,11 +93,11 @@ export async function POST(
     }
 
     // Generate credentials
-    const plainPassword = generatePassword(staff.name);
+    const plainPassword = generateDefaultPassword(staff.name, staff.dateOfJoining);
 
     const user = await User.create({
       name: staff.name,
-      email: staff.email,
+      email: schoolEmail,
       password: plainPassword, // pre-save hook in User model will hash it
       role: "staff",
       phone: staff.phone,
@@ -91,7 +111,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       data: {
-        email: staff.email,
+        email: schoolEmail,
         password: plainPassword, // show once to admin
         staffName: staff.name,
         staffId: staff.staffId,
@@ -128,14 +148,14 @@ export async function PUT(
       return NextResponse.json({ success: false, message: "User account not found" }, { status: 404 });
     }
 
-    const newPassword = generatePassword(staff.name);
+    const newPassword = generateResetPassword(staff.name);
     user.password = newPassword; // pre-save hook will hash
     await user.save();
 
     return NextResponse.json({
       success: true,
       data: {
-        email: staff.email,
+        email: user.email,
         password: newPassword,
         staffName: staff.name,
         staffId: staff.staffId,
