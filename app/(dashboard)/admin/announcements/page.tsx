@@ -11,8 +11,7 @@ import { formatDate } from "@/lib/utils";
 import {
   Plus, Edit, Trash2, Loader2, Megaphone, AlertCircle, Users, BookOpen,
   CheckCircle2, Bell,
-} from "lucide-react";
-
+} from "lucide-react";import { useLanguage } from "@/components/providers/LanguageProvider";
 interface Announcement {
   _id: string;
   title: string;
@@ -43,6 +42,7 @@ const audienceConfig: Record<string, { label: string; icon: typeof Users; color:
 const emptyForm = { title: "", content: "", priority: "medium" as Announcement["priority"], targetAudience: "both" as Announcement["targetAudience"], expiresAt: "" };
 
 export default function AdminAnnouncementsPage() {
+  const { t } = useLanguage();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -163,24 +163,24 @@ export default function AdminAnnouncementsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
-                <Megaphone className="w-5 h-5" /> Announcements
+                <Megaphone className="w-5 h-5" /> {t("announcementsTitle")}
               </h2>
-              <p className="text-white/70 text-sm">Broadcast messages to staff and parents</p>
+              <p className="text-white/70 text-sm">{t("broadcastMsg")}</p>
               <div className="flex items-center gap-4 mt-3">
-                <div><p className="text-2xl font-bold">{stats.total}</p><p className="text-white/60 text-xs">Total</p></div>
+                <div><p className="text-2xl font-bold">{stats.total}</p><p className="text-white/60 text-xs">{t("total")}</p></div>
                 <div className="w-px h-10 bg-white/20" />
-                <div><p className="text-2xl font-bold">{stats.staff}</p><p className="text-white/60 text-xs">Reach Staff</p></div>
+                <div><p className="text-2xl font-bold">{stats.staff}</p><p className="text-white/60 text-xs">{t("staffOnly")}</p></div>
                 <div className="w-px h-10 bg-white/20" />
-                <div><p className="text-2xl font-bold">{stats.parent}</p><p className="text-white/60 text-xs">Reach Parents</p></div>
+                <div><p className="text-2xl font-bold">{stats.parent}</p><p className="text-white/60 text-xs">{t("parentsOnly")}</p></div>
                 <div className="w-px h-10 bg-white/20" />
-                <div><p className="text-2xl font-bold text-red-300">{stats.urgent}</p><p className="text-white/60 text-xs">Urgent</p></div>
+                <div><p className="text-2xl font-bold text-red-300">{stats.urgent}</p><p className="text-white/60 text-xs">{t("urgentLabel")}</p></div>
               </div>
             </div>
             <button
               className="flex items-center gap-2 bg-white text-violet-700 hover:bg-violet-50 shadow-lg font-semibold text-sm px-5 py-2 rounded-xl transition-all duration-200 active:scale-[0.97]"
               onClick={() => { setForm(emptyForm); setError(""); setAddSuccess(false); setShowAdd(true); }}
             >
-              <Plus className="w-4 h-4" /> New Announcement
+              <Plus className="w-4 h-4" /> {t("newAnnouncement")}
             </button>
           </div>
         </CardContent>
@@ -195,17 +195,17 @@ export default function AdminAnnouncementsPage() {
               onChange={(e) => setFilterAudience(e.target.value)}
               className="h-9 px-3 border border-gray-300 rounded-xl text-sm bg-white"
             >
-              <option value="all">All Audiences</option>
-              <option value="staff">Staff Only</option>
-              <option value="parent">Parents Only</option>
-              <option value="both">Both (Everyone)</option>
+              <option value="all">{t("allAudiences")}</option>
+              <option value="staff">{t("staffOnly")}</option>
+              <option value="parent">{t("parentsOnly")}</option>
+              <option value="both">{t("everyone")}</option>
             </select>
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
               className="h-9 px-3 border border-gray-300 rounded-xl text-sm bg-white"
             >
-              <option value="all">All Priorities</option>
+              <option value="all">{t("allPriorities")}</option>
               {PRIORITIES.map((p) => <option key={p} value={p}>{priorityConfig[p].label}</option>)}
             </select>
             <span className="text-xs text-gray-400 ml-auto">{filtered.length} announcement{filtered.length !== 1 ? "s" : ""}</span>
@@ -281,7 +281,7 @@ export default function AdminAnnouncementsPage() {
       {/* ── Add Modal ─────────────────────────────────────────────── */}
       <Dialog open={showAdd} onClose={resetAdd} maxWidth="md">
         <DialogHeader>
-          <DialogTitle>{addSuccess ? "Announcement Published!" : "New Announcement"}</DialogTitle>
+          <DialogTitle>{addSuccess ? t("announcementSent") : t("newAnnouncement")}</DialogTitle>
           <DialogCloseButton onClose={resetAdd} />
         </DialogHeader>
         <DialogContent>
@@ -290,7 +290,7 @@ export default function AdminAnnouncementsPage() {
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Announcement sent!</h3>
+              <h3 className="text-lg font-bold text-gray-900">{t("announcementSent")}</h3>
               <p className="text-sm text-gray-500">
                 Your announcement has been published to <strong>{audienceConfig[form.targetAudience].label}</strong>.
               </p>
@@ -303,16 +303,16 @@ export default function AdminAnnouncementsPage() {
           {addSuccess ? (
             <>
               <Button variant="outline" onClick={() => { setAddSuccess(false); setForm(emptyForm); setError(""); }}>
-                Post Another
+                {t("postAnother")}
               </Button>
-              <Button onClick={resetAdd}>Done</Button>
+              <Button onClick={resetAdd}>{t("confirm")}</Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={resetAdd} disabled={saving}>Cancel</Button>
+              <Button variant="outline" onClick={resetAdd} disabled={saving}>{t("cancel")}</Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Megaphone className="w-4 h-4 mr-1" />}
-                Publish
+                {t("publishAnnouncement")}
               </Button>
             </>
           )}
@@ -323,17 +323,17 @@ export default function AdminAnnouncementsPage() {
       {editTarget && (
         <Dialog open onClose={() => { setEditTarget(null); setError(""); }} maxWidth="md">
           <DialogHeader>
-            <DialogTitle>Edit Announcement</DialogTitle>
+            <DialogTitle>{t("editAnnouncement")}</DialogTitle>
             <DialogCloseButton onClose={() => { setEditTarget(null); setError(""); }} />
           </DialogHeader>
           <DialogContent>
             <AnnouncementForm form={form} setForm={setForm} error={error} saving={saving} />
           </DialogContent>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setEditTarget(null); setError(""); }} disabled={saving}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setEditTarget(null); setError(""); }} disabled={saving}>{t("cancel")}</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-              Save Changes
+              {t("save")}
             </Button>
           </DialogFooter>
         </Dialog>
@@ -343,7 +343,7 @@ export default function AdminAnnouncementsPage() {
       {deleteTarget && (
         <Dialog open onClose={() => setDeleteTarget(null)} maxWidth="sm">
           <DialogHeader>
-            <DialogTitle>Delete Announcement</DialogTitle>
+            <DialogTitle>{t("deleteAnnouncement")}</DialogTitle>
             <DialogCloseButton onClose={() => setDeleteTarget(null)} />
           </DialogHeader>
           <DialogContent>
@@ -360,10 +360,10 @@ export default function AdminAnnouncementsPage() {
             </div>
           </DialogContent>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t("cancel")}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-              Delete
+              {t("delete")}
             </Button>
           </DialogFooter>
         </Dialog>

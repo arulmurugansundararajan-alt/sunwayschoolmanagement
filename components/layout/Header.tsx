@@ -1,10 +1,9 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { Bell, Search, Menu, X, ChevronDown } from "lucide-react";
+import { Bell, Search, Menu, X, ChevronDown, CalendarDays, Megaphone } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { useState } from "react";
-import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/components/providers/NotificationContext";
 import { LanguageToggle } from "@/components/shared/LanguageToggle";
@@ -16,20 +15,13 @@ interface HeaderProps {
   onMenuClick?: () => void;
 }
 
-const typeColors = {
-  info: "bg-blue-100 text-blue-600",
-  warning: "bg-amber-100 text-amber-600",
-  success: "bg-emerald-100 text-emerald-600",
-  error: "bg-red-100 text-red-600",
-};
-
 export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
   const { data: session } = useSession();
   const { t } = useLanguage();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { notifications, unreadCount, markAllRead, markRead } = useNotifications();
+  const { notifications, unreadCount, markAllRead, markRead, clearAll, isRead } = useNotifications();
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 gap-4 sticky top-0 z-30 shadow-sm">
@@ -73,7 +65,9 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full ring-2 ring-white text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
             )}
           </button>
 
@@ -82,11 +76,22 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
               <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
               <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 z-20 overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm">{t("notifications")}</h3>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold hover:bg-red-200">
-                        {unreadCount} new
+                      <button
+                        onClick={markAllRead}
+                        className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-2 py-0.5 rounded-full hover:bg-indigo-50"
+                      >
+                        {t("markAllRead")}
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={() => { clearAll(); setShowNotifications(false); }}
+                        className="text-xs text-gray-400 font-medium hover:text-red-500 px-2 py-0.5 rounded-full hover:bg-red-50"
+                      >
+                        {t("close")}
                       </button>
                     )}
                     <button onClick={() => setShowNotifications(false)}>
@@ -95,37 +100,69 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                   </div>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
-                  {notifications.map((notif) => (
-                    <div
-                      key={notif._id}
-                      onClick={() => markRead(notif._id)}
-                      className={cn(
-                        "p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors",
-                        !notif.isRead && "bg-indigo-50/50"
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold", typeColors[notif.type])}>
-                          {notif.type === "info" ? "i" : notif.type === "warning" ? "!" : notif.type === "success" ? "✓" : "×"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs font-semibold text-gray-900 truncate">{notif.title}</p>
-                            {!notif.isRead && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
-                          <p className="text-xs text-gray-400 mt-1">{formatDate(notif.createdAt)}</p>
-                        </div>
-                      </div>
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-10 text-gray-400">
+                      <Bell className="w-8 h-8 opacity-30" />
+                      <p className="text-xs">{t("noNotifications")}</p>
                     </div>
-                  ))}
+                  ) : (
+                    notifications.map((notif) => {
+                      const read = isRead(notif._id);
+                      const isEvent = notif.type === "event";
+                      return (
+                        <div
+                          key={notif._id}
+                          onClick={() => markRead(notif._id)}
+                          className={cn(
+                            "p-3.5 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors",
+                            !read && "bg-indigo-50/50"
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                              isEvent
+                                ? "bg-purple-100 text-purple-600"
+                                : "bg-amber-100 text-amber-600"
+                            )}>
+                              {isEvent
+                                ? <CalendarDays className="w-4 h-4" />
+                                : <Megaphone className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-semibold text-gray-900 truncate">{notif.title}</p>
+                                {!read && (
+                                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={cn(
+                                  "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+                                  isEvent
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-amber-100 text-amber-700"
+                                )}>
+                                  {isEvent ? t("eventType") : t("announcementType")}
+                                </span>
+                                {notif.subLabel && (
+                                  <span className="text-[10px] text-gray-400">{notif.subLabel}</span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-gray-400 mt-1">
+                                {new Date(notif.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
-                <div className="p-3 text-center">
-                  <button className="text-xs text-indigo-600 font-medium hover:text-indigo-700">
-                    View all notifications
-                  </button>
+                <div className="p-3 border-t border-gray-100 text-center">
+                  <span className="text-xs text-gray-400">
+                    {notifications.length} {notifications.length === 1 ? "notification" : "notifications"}
+                  </span>
                 </div>
               </div>
             </>

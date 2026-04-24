@@ -11,6 +11,7 @@ import {
   Plus, Edit, Trash2, Loader2, Calendar as CalendarIcon, ChevronLeft, ChevronRight,
   PartyPopper, BookOpen, Users, Trophy, Palette, Handshake, MoreHorizontal, AlertCircle,
 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface EventItem {
   _id: string;
@@ -52,6 +53,7 @@ function formatDateInput(d: string | Date) {
 }
 
 export default function AdminEventsPage() {
+  const { t } = useLanguage();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -217,10 +219,10 @@ export default function AdminEventsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label: "Total Events", value: events.length, color: "text-gray-900", bg: "bg-gray-50" },
-          { label: "Upcoming", value: upcomingEvents.length, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Holidays", value: holidayCount, color: "text-red-600", bg: "bg-red-50" },
-          { label: "Exams", value: examCount, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: t("totalEvents"), value: events.length, color: "text-gray-900", bg: "bg-gray-50" },
+          { label: t("upcoming"), value: upcomingEvents.length, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: t("holidays"), value: holidayCount, color: "text-red-600", bg: "bg-red-50" },
+          { label: t("exams"), value: examCount, color: "text-amber-600", bg: "bg-amber-50" },
         ].map((s) => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-4 text-center border border-gray-100`}>
             <p className={`text-3xl font-extrabold ${s.color}`}>{s.value}</p>
@@ -232,18 +234,18 @@ export default function AdminEventsPage() {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="default" onClick={openCreate}>
-          <Plus className="w-4 h-4 mr-2" /> Add Event
+          <Plus className="w-4 h-4 mr-2" /> {t("addEvent")}
         </Button>
         <div className="flex items-center gap-1 bg-white border rounded-xl px-1 py-1">
-          {["all", ...EVENT_TYPES].map((t) => (
+            {["all", ...EVENT_TYPES].map((t_type) => (
             <button
-              key={t}
-              onClick={() => setFilterType(t)}
+              key={t_type}
+              onClick={() => setFilterType(t_type)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                filterType === t ? "bg-purple-600 text-white shadow" : "text-gray-500 hover:bg-gray-100"
+                filterType === t_type ? "bg-purple-600 text-white shadow" : "text-gray-500 hover:bg-gray-100"
               }`}
             >
-              {t === "all" ? "All" : t}
+              {t_type === "all" ? t("allEvents") : t_type}
             </button>
           ))}
         </div>
@@ -265,7 +267,7 @@ export default function AdminEventsPage() {
                   </button>
                 </div>
                 <button onClick={goToday} className="text-xs font-semibold text-purple-600 hover:text-purple-700 px-2 py-1 rounded hover:bg-purple-50">
-                  Today
+                  {t("todayLabel")}
                 </button>
               </div>
             </CardHeader>
@@ -352,7 +354,7 @@ export default function AdminEventsPage() {
             <Card>
               <CardContent className="py-12 flex flex-col items-center gap-2 text-center">
                 <CalendarIcon className="w-8 h-8 text-gray-300" />
-                <p className="text-sm text-gray-400 font-medium">No events this month</p>
+                <p className="text-sm text-gray-400 font-medium">{t("noEventsThisMonth")}</p>
               </CardContent>
             </Card>
           ) : (
@@ -400,7 +402,7 @@ export default function AdminEventsPage() {
       {/* Create / Edit Dialog */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>{editingEvent ? "Edit Event" : "Add New Event"}</DialogTitle>
+          <DialogTitle>{editingEvent ? t("editEvent") : t("addEvent")}</DialogTitle>
           <DialogCloseButton onClose={() => setFormOpen(false)} />
         </DialogHeader>
         <DialogContent>
@@ -484,10 +486,10 @@ export default function AdminEventsPage() {
           </div>
         </DialogContent>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setFormOpen(false)}>{t("cancel")}</Button>
           <Button variant="default" onClick={handleSubmit} disabled={saving}>
             {saving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-            {editingEvent ? "Update Event" : "Create Event"}
+            {editingEvent ? t("save") : t("addEvent")}
           </Button>
         </DialogFooter>
       </Dialog>
@@ -495,7 +497,7 @@ export default function AdminEventsPage() {
       {/* Delete Confirmation */}
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="sm">
         <DialogHeader>
-          <DialogTitle>Delete Event</DialogTitle>
+          <DialogTitle>{t("deleteEvent")}</DialogTitle>
           <DialogCloseButton onClose={() => setDeleteTarget(null)} />
         </DialogHeader>
         <DialogContent>
@@ -508,10 +510,10 @@ export default function AdminEventsPage() {
           </div>
         </DialogContent>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t("cancel")}</Button>
           <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
             {deleting && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-            Delete
+            {t("delete")}
           </Button>
         </DialogFooter>
       </Dialog>

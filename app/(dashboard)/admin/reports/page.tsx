@@ -15,6 +15,7 @@ import {
 } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { Download, BarChart3, Users, DollarSign, GraduationCap, FileText } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const topStudents = mockStudents
   .filter(s => s.attendance && s.attendance.percentage >= 90)
@@ -27,6 +28,7 @@ const topStudents = mockStudents
   }));
 
 export default function ReportsPage() {
+  const { t } = useLanguage();
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -34,15 +36,15 @@ export default function ReportsPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold mb-1">Reports & Analytics</h2>
+              <h2 className="text-xl font-bold mb-1">{t("reportsAnalytics")}</h2>
               <p className="text-white/60 text-sm">Academic Year 2024-2025 • Comprehensive Analytics</p>
             </div>
             <div className="flex gap-2">
               <Button className="bg-white/10 hover:bg-white/20 text-white border-white/20 border gap-2" variant="outline" size="sm">
-                <Download className="w-4 h-4" /> Export PDF
+                <Download className="w-4 h-4" /> {t("exportPdf")}
               </Button>
               <Button className="bg-white/10 hover:bg-white/20 text-white border-white/20 border gap-2" variant="outline" size="sm">
-                <Download className="w-4 h-4" /> Export Excel
+                <Download className="w-4 h-4" /> {t("exportExcel")}
               </Button>
             </div>
           </div>
@@ -52,16 +54,16 @@ export default function ReportsPage() {
       <Tabs defaultValue="academic">
         <TabsList className="bg-gray-100 p-1 rounded-xl">
           <TabsTrigger value="academic">
-            <GraduationCap className="w-4 h-4 mr-1.5" /> Academic
+            <GraduationCap className="w-4 h-4 mr-1.5" /> {t("academic")}
           </TabsTrigger>
           <TabsTrigger value="attendance">
-            <Users className="w-4 h-4 mr-1.5" /> Attendance
+            <Users className="w-4 h-4 mr-1.5" /> {t("attendance")}
           </TabsTrigger>
           <TabsTrigger value="financial">
-            <DollarSign className="w-4 h-4 mr-1.5" /> Financial
+            <DollarSign className="w-4 h-4 mr-1.5" /> {t("financial")}
           </TabsTrigger>
           <TabsTrigger value="overview">
-            <BarChart3 className="w-4 h-4 mr-1.5" /> Overview
+            <BarChart3 className="w-4 h-4 mr-1.5" /> {t("overview")}
           </TabsTrigger>
         </TabsList>
 
@@ -136,7 +138,7 @@ export default function ReportsPage() {
             {/* Top Students */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Top Performing Students (Attendance)</CardTitle>
+                <CardTitle className="text-base">{t("topStudents")}</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3">
@@ -168,10 +170,10 @@ export default function ReportsPage() {
           <div className="space-y-5">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Avg Attendance", value: "88.4%", color: "text-emerald-600" },
-                { label: "Total Working Days", value: "180", color: "text-blue-600" },
-                { label: "Days Completed", value: "142", color: "text-purple-600" },
-                { label: "Below 75%", value: "23", color: "text-red-600" },
+                { label: t("avgAttendance"), value: "88.4%", color: "text-emerald-600" },
+                { label: t("totalWorkingDays"), value: "180", color: "text-blue-600" },
+                { label: t("daysCompleted"), value: "142", color: "text-purple-600" },
+                { label: t("below75"), value: "23", color: "text-red-600" },
               ].map((stat) => (
                 <Card key={stat.label}>
                   <CardContent className="p-4 text-center">
@@ -225,10 +227,10 @@ export default function ReportsPage() {
           <div className="space-y-5">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Annual Target", value: formatCurrency(32000000), color: "text-blue-600" },
-                { label: "Collected YTD", value: formatCurrency(24800000), color: "text-emerald-600" },
-                { label: "Pending", value: formatCurrency(680000), color: "text-amber-600" },
-                { label: "Achievement", value: "77.5%", color: "text-purple-600" },
+                { label: t("annualTarget"), value: formatCurrency(32000000), color: "text-blue-600" },
+                { label: t("collectedYTD"), value: formatCurrency(24800000), color: "text-emerald-600" },
+                { label: t("pending"), value: formatCurrency(680000), color: "text-amber-600" },
+                { label: t("achievement"), value: "77.5%", color: "text-purple-600" },
               ].map((stat) => (
                 <Card key={stat.label}>
                   <CardContent className="p-4 text-center">

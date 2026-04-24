@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import BarChartComponent from "@/components/charts/BarChartComponent";
 import PieChartComponent from "@/components/charts/PieChartComponent";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +111,7 @@ const paymentColors: Record<string, string> = {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AdminExpensesPage() {
+  const { t } = useLanguage();
   const [expenses, setExpenses]       = useState<Expense[]>([]);
   const [categories, setCategories]   = useState<ExpenseCategory[]>([]);
   const [summary, setSummary]         = useState<Summary | null>(null);
@@ -324,18 +326,18 @@ export default function AdminExpensesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Receipt className="w-6 h-6 text-indigo-600" />
-            Expense Management
+            {t("expenseManagement")}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Track and manage school expenses</p>
+          <p className="text-sm text-gray-500 mt-0.5">{t("trackExpenses")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setCatOpen(true)}>
             <Settings2 className="w-4 h-4 mr-1.5" />
-            Categories
+            {t("categoriesLabel")}
           </Button>
           <Button onClick={openAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white">
             <Plus className="w-4 h-4 mr-1.5" />
-            Add Expense
+            {t("addExpense")}
           </Button>
         </div>
       </div>
@@ -343,25 +345,25 @@ export default function AdminExpensesPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          label="This Month"
+          label={t("thisMonth")}
           value={formatCurrency(summary?.monthTotal || 0)}
           icon={<IndianRupee className="w-5 h-5" />}
           color="indigo"
         />
         <StatCard
-          label="This Year"
+          label={t("thisYear")}
           value={formatCurrency(summary?.yearTotal || 0)}
           icon={<TrendingUp className="w-5 h-5" />}
           color="blue"
         />
         <StatCard
-          label="Today"
+          label={t("todayExpense")}
           value={formatCurrency(summary?.todayTotal || 0)}
           icon={<Calendar className="w-5 h-5" />}
           color="emerald"
         />
         <StatCard
-          label="Total Records"
+          label={t("total")}
           value={String(pagination.total)}
           icon={<Receipt className="w-5 h-5" />}
           color="amber"
@@ -452,7 +454,7 @@ export default function AdminExpensesPage() {
                 onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
                 className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
               >
-                <option value="all">All Categories</option>
+                <option value="all">{t("allCategories")}</option>
                 {categories.map((c) => (
                   <option key={c._id} value={c.name}>{c.name}</option>
                 ))}
@@ -499,7 +501,7 @@ export default function AdminExpensesPage() {
           ) : expenses.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-gray-400 gap-2">
               <Wallet className="w-10 h-10" />
-              <p className="text-sm font-medium">No expenses found</p>
+              <p className="text-sm font-medium">{t("noExpensesFound")}</p>
               {hasActiveFilters && (
                 <p className="text-xs">Try clearing the filters</p>
               )}
@@ -624,7 +626,7 @@ export default function AdminExpensesPage() {
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="lg">
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingExpense ? "Edit Expense" : "Add Expense"}</DialogTitle>
+            <DialogTitle>{editingExpense ? t("editExpense") : t("addExpense")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -739,10 +741,10 @@ export default function AdminExpensesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>{t("cancel")}</Button>
             <Button onClick={saveExpense} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {editingExpense ? "Save Changes" : "Add Expense"}
+              {editingExpense ? t("save") : t("addExpense")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -761,14 +763,14 @@ export default function AdminExpensesPage() {
             This action cannot be undone.
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t("cancel")}</Button>
             <Button
               onClick={confirmDelete}
               disabled={deleting}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {deleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Delete
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
