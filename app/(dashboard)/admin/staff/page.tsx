@@ -285,8 +285,8 @@ export default function StaffManagementPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: t("totalStaffLabel"), value: pagination.total, color: "from-indigo-500 to-purple-600", icon: Users },
-          { label: "Teachers", value: totalTeachers, color: "from-emerald-500 to-teal-600", icon: BookOpen },
-          { label: "HODs", value: totalHODs, color: "from-amber-500 to-orange-600", icon: Award },
+          { label: t("teachersLabel"), value: totalTeachers, color: "from-emerald-500 to-teal-600", icon: BookOpen },
+          { label: t("hodsLabel"), value: totalHODs, color: "from-amber-500 to-orange-600", icon: Award },
           { label: t("departmentsLabel"), value: departments.length, color: "from-blue-500 to-cyan-600", icon: Building2 },
         ].map((stat) => (
           <Card key={stat.label} className={`bg-gradient-to-br ${stat.color} text-white border-0 shadow-lg`}>
@@ -303,7 +303,7 @@ export default function StaffManagementPage() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
-              placeholder="Search by name, ID, designation..."
+              placeholder={t("searchStaffPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -331,7 +331,7 @@ export default function StaffManagementPage() {
           </div>
           {!loading && (
             <p className="text-xs text-gray-500 mt-2">
-              {pagination.total} staff member{pagination.total !== 1 ? "s" : ""} found
+              {pagination.total} {t("staffMembersFound")}
             </p>
           )}
         </CardContent>
@@ -350,12 +350,12 @@ export default function StaffManagementPage() {
       <Card>
         {loading ? (
           <div className="flex items-center justify-center h-48 text-gray-400">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading staff...
+            <Loader2 className="w-6 h-6 animate-spin mr-2" /> {t("loadingStaff")}
           </div>
         ) : staff.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-gray-400 gap-2">
             <Users className="w-10 h-10 opacity-30" />
-            <p className="text-sm">No staff members found</p>
+            <p className="text-sm">{t("noStaffFound")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -404,16 +404,16 @@ export default function StaffManagementPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-medium text-gray-700">{s.experience} yrs</span>
+                    <span className="text-sm font-medium text-gray-700">{s.experience} {t("yrsLabel")}</span>
                   </TableCell>
                   <TableCell>
                     {s.hasLoginAccount ? (
                       <Badge variant="success" className="gap-1">
-                        <ShieldCheck className="w-3 h-3" /> Active
+                        <ShieldCheck className="w-3 h-3" /> {t("active")}
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="gap-1 text-gray-500">
-                        No Account
+                        {t("noAccount")}
                       </Badge>
                     )}
                   </TableCell>
@@ -463,11 +463,11 @@ export default function StaffManagementPage() {
         {pagination.totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
             <p className="text-xs text-gray-500">
-              Page {pagination.page} of {pagination.totalPages} • {pagination.total} records
+              {t("pageLabel")} {pagination.page} {t("ofLabel")} {pagination.totalPages} • {pagination.total} {t("recordsLabel")}
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
-              <Button variant="outline" size="sm" disabled={currentPage >= pagination.totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+              <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>{t("previous")}</Button>
+              <Button variant="outline" size="sm" disabled={currentPage >= pagination.totalPages} onClick={() => setCurrentPage((p) => p + 1)}>{t("next")}</Button>
             </div>
           </div>
         )}
@@ -477,7 +477,7 @@ export default function StaffManagementPage() {
       {viewStaff && (
         <Dialog open onClose={() => setViewStaff(null)} maxWidth="lg">
           <DialogHeader>
-            <DialogTitle>Staff Details</DialogTitle>
+            <DialogTitle>{t("staffDetails")}</DialogTitle>
             <DialogCloseButton onClose={() => setViewStaff(null)} />
           </DialogHeader>
           <DialogContent>
@@ -491,12 +491,12 @@ export default function StaffManagementPage() {
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               {[
-                { label: "Email", value: viewStaff.email, icon: Mail },
-                { label: "Phone", value: viewStaff.phone, icon: Phone },
-                { label: "Qualifications", value: viewStaff.qualifications || "—", icon: Award },
-                { label: "Experience", value: `${viewStaff.experience} years`, icon: Award },
-                { label: "Joining Date", value: formatDate(viewStaff.dateOfJoining), icon: Award },
-                { label: "Gender", value: viewStaff.gender, icon: Users },
+                { label: t("email"), value: viewStaff.email, icon: Mail },
+                { label: t("phone"), value: viewStaff.phone, icon: Phone },
+                { label: t("qualificationsLabel"), value: viewStaff.qualifications || "—", icon: Award },
+                { label: t("experienceLabel"), value: `${viewStaff.experience} years`, icon: Award },
+                { label: t("joiningDate"), value: formatDate(viewStaff.dateOfJoining), icon: Award },
+                { label: t("gender"), value: viewStaff.gender, icon: Users },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-2">
                   <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -511,7 +511,7 @@ export default function StaffManagementPage() {
             </div>
             {viewStaff.subjects.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Subjects Teaching</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">{t("subjectsTeaching")}</p>
                 <div className="flex flex-wrap gap-2">
                   {viewStaff.subjects.map((sub) => (
                     <span key={sub} className={`text-xs px-2.5 py-1 rounded-full border ${getSubjectColor(sub)}`}>{sub}</span>
@@ -521,7 +521,7 @@ export default function StaffManagementPage() {
             )}
             {viewStaff.teacherType === "class_teacher" && viewStaff.classes[0] && (
               <div className="mt-4">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Homeroom Class</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">{t("homeroomClass")}</p>
                 <span className="text-xs px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium">
                   {viewStaff.classes[0]}
                 </span>
@@ -529,7 +529,7 @@ export default function StaffManagementPage() {
             )}
             {viewStaff.teacherType === "subject_teacher" && viewStaff.classes.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Classes Teaching</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">{t("classesTeaching")}</p>
                 <div className="flex flex-wrap gap-2">
                   {viewStaff.classes.map((cls) => (
                     <span key={cls} className="text-xs px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700">{cls}</span>
@@ -539,8 +539,8 @@ export default function StaffManagementPage() {
             )}
           </DialogContent>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewStaff(null)}>Close</Button>
-            <Button onClick={() => { setEditStaff(viewStaff); setViewStaff(null); setFormError(null); }}>Edit Profile</Button>
+            <Button variant="outline" onClick={() => setViewStaff(null)}>{t("close")}</Button>
+            <Button onClick={() => { setEditStaff(viewStaff); setViewStaff(null); setFormError(null); }}>{t("editProfile")}</Button>
           </DialogFooter>
         </Dialog>
       )}
@@ -548,7 +548,7 @@ export default function StaffManagementPage() {
       {/* ── Add Modal ──────────────────────────────────────────────────────── */}
       <Dialog open={showAddModal} onClose={() => { if (!submitting) { setShowAddModal(false); setAddStep(1); } }} maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>{addSuccess ? "Staff Added Successfully" : "Add New Staff Member"}</DialogTitle>
+          <DialogTitle>{addSuccess ? t("staffAdded") : t("addNewStaff")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setShowAddModal(false)} />
         </DialogHeader>
         <DialogContent>
@@ -559,20 +559,20 @@ export default function StaffManagementPage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">{addSuccess.name}</h3>
-                <p className="text-sm text-gray-500">has been added to the staff directory</p>
+                <p className="text-sm text-gray-500">{t("addedToDirectory")}</p>
               </div>
               <div className="bg-gray-100 px-6 py-3 rounded-xl">
-                <p className="text-xs text-gray-500 mb-1">Staff ID</p>
+                <p className="text-xs text-gray-500 mb-1">{t("staffIdLabel")}</p>
                 <p className="text-xl font-mono font-bold text-indigo-600">{addSuccess.staffId}</p>
               </div>
               {addSuccess.loginEmail && (
                 <div className="w-full bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-left space-y-3">
-                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Login Account Created</p>
+                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">{t("loginAccountCreated")}</p>
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
                     <p className="text-xs font-semibold text-amber-700">⚠ This password will only be shown once. Copy and share it with the staff member.</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-20 flex-shrink-0">Login Email</span>
+                    <span className="text-xs text-gray-500 w-20 flex-shrink-0">{t("loginEmailLabel")}</span>
                     <code className="flex-1 text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1 text-indigo-700 break-all">{addSuccess.loginEmail}</code>
                     <Button variant="ghost" size="icon-sm" onClick={() => copyToClipboard(addSuccess.loginEmail!, "email")} className="flex-shrink-0">
                       {copiedField === "email" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -580,7 +580,7 @@ export default function StaffManagementPage() {
                   </div>
                   {addSuccess.loginPassword && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 w-20 flex-shrink-0">Password</span>
+                      <span className="text-xs text-gray-500 w-20 flex-shrink-0">{t("password")}</span>
                       <code className="flex-1 text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1 text-indigo-700">{addSuccess.loginPassword}</code>
                       <Button variant="ghost" size="icon-sm" onClick={() => copyToClipboard(addSuccess.loginPassword!, "password")} className="flex-shrink-0">
                         {copiedField === "password" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -678,7 +678,7 @@ export default function StaffManagementPage() {
       {/* ── Delete Confirm Modal ───────────────────────────────────────────── */}
       <Dialog open={!!deleteTarget} onClose={() => !submitting && setDeleteTarget(null)} maxWidth="sm">
         <DialogHeader>
-          <DialogTitle>Deactivate Staff Member</DialogTitle>
+          <DialogTitle>{t("deactivateStaff")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setDeleteTarget(null)} />
         </DialogHeader>
         <DialogContent>

@@ -223,10 +223,10 @@ export default function FeeManagementPage() {
       {/* ── Stats Row ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label: t("totalCollected"), value: formatCurrency(summary.totalCollected), icon: CheckCircle2, bg: "from-emerald-500 to-teal-600", sub: `${summary.byStatus.paid} paid in full` },
-          { label: t("totalPending"), value: formatCurrency(summary.totalPending), icon: AlertTriangle, bg: "from-amber-500 to-orange-500", sub: `${summary.byStatus.pending + summary.byStatus.partial} outstanding` },
-          { label: t("overdueAmount"), value: formatCurrency(summary.totalOverdue), icon: Clock, bg: "from-red-500 to-rose-600", sub: `${summary.byStatus.overdue} overdue records` },
-          { label: t("collectionRate"), value: `${summary.collectionRate}%`, icon: TrendingUp, bg: "from-indigo-500 to-purple-600", sub: "Of total billed amount" },
+          { label: t("totalCollected"), value: formatCurrency(summary.totalCollected), icon: CheckCircle2, bg: "from-emerald-500 to-teal-600", sub: `${summary.byStatus.paid} ${t("paidInFull")}` },
+          { label: t("totalPending"), value: formatCurrency(summary.totalPending), icon: AlertTriangle, bg: "from-amber-500 to-orange-500", sub: `${summary.byStatus.pending + summary.byStatus.partial} ${t("outstandingCount")}` },
+          { label: t("overdueAmount"), value: formatCurrency(summary.totalOverdue), icon: Clock, bg: "from-red-500 to-rose-600", sub: `${summary.byStatus.overdue} ${t("overdueRecords")}` },
+          { label: t("collectionRate"), value: `${summary.collectionRate}%`, icon: TrendingUp, bg: "from-indigo-500 to-purple-600", sub: t("ofTotalBilled") },
         ].map((s) => (
           <Card key={s.label} className={`bg-gradient-to-br ${s.bg} text-white border-0 shadow-lg`}>
             <CardContent className="p-4">
@@ -243,8 +243,8 @@ export default function FeeManagementPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <Card className="xl:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Fee Overview</CardTitle>
-            <CardDescription>Collected vs Pending vs Overdue (₹)</CardDescription>
+            <CardTitle className="text-base">{t("feeOverview")}</CardTitle>
+            <CardDescription>{t("collectedPendingOverdue")}</CardDescription>
           </CardHeader>
           <CardContent>
             <AreaChartComponent
@@ -259,8 +259,8 @@ export default function FeeManagementPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Status Breakdown</CardTitle>
-            <CardDescription>By number of records</CardDescription>
+            <CardTitle className="text-base">{t("statusBreakdown")}</CardTitle>
+            <CardDescription>{t("byNumberRecords")}</CardDescription>
           </CardHeader>
           <CardContent>
             <PieChartComponent
@@ -288,7 +288,7 @@ export default function FeeManagementPage() {
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white">
               <option value="">{t("allStatus")}</option>
-              {["Paid", "Pending", "Partial", "Overdue"].map((s) => <option key={s} value={s}>{s}</option>)}
+              {["Paid", "Pending", "Partial", "Overdue"].map((s) => <option key={s} value={s}>{t(s.toLowerCase() as "paid" | "pending" | "partial" | "overdue")}</option>)}
             </select>
             <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}
               className="h-10 px-3 border border-gray-300 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white">
@@ -309,7 +309,7 @@ export default function FeeManagementPage() {
           </div>
           {!loading && (
             <p className="text-xs text-gray-400 mt-2">
-              {pagination.total} record{pagination.total !== 1 ? "s" : ""} found
+              {pagination.total} {t("recordsFound")}
             </p>
           )}
         </CardContent>
@@ -323,12 +323,12 @@ export default function FeeManagementPage() {
 
         {loading ? (
           <div className="flex items-center justify-center h-52 text-gray-400">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading records…
+            <Loader2 className="w-6 h-6 animate-spin mr-2" /> {t("loadingRecords")}
           </div>
         ) : fees.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-52 text-gray-400 gap-2">
             <IndianRupee className="w-10 h-10 opacity-25" />
-            <p className="text-sm">No fee records found</p>
+            <p className="text-sm">{t("noFeeRecords")}</p>
             <Button variant="ghost" size="sm" onClick={openAddModal} className="text-purple-600">Add a fee record</Button>
           </div>
         ) : (
@@ -416,12 +416,12 @@ export default function FeeManagementPage() {
           <div className="flex items-center justify-between p-4 border-t border-gray-100">
             <p className="text-xs text-gray-500">Page {pagination.page} of {pagination.totalPages}</p>
             <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>Prev</Button>
+              <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>{t("previous")}</Button>
               {pageNums.map((p) => (
                 <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm"
                   className="w-8 p-0" onClick={() => setCurrentPage(p)}>{p}</Button>
               ))}
-              <Button variant="outline" size="sm" disabled={currentPage >= pagination.totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+              <Button variant="outline" size="sm" disabled={currentPage >= pagination.totalPages} onClick={() => setCurrentPage((p) => p + 1)}>{t("next")}</Button>
             </div>
           </div>
         )}
@@ -430,7 +430,7 @@ export default function FeeManagementPage() {
       {/* ══ Add Fee Modal ══════════════════════════════════════════════════════ */}
       <Dialog open={showAddModal} onClose={() => !submitting && setShowAddModal(false)} maxWidth="md">
         <DialogHeader>
-          <DialogTitle>{addSuccess ? "Fee Record Created" : "Add Fee Record"}</DialogTitle>
+          <DialogTitle>{addSuccess ? t("feeRecordCreated") : t("addFeeRecord")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setShowAddModal(false)} />
         </DialogHeader>
         <DialogContent>
@@ -574,15 +574,15 @@ export default function FeeManagementPage() {
                 setAddSuccess(null);
                 addForm.reset({ academicYear: `${thisYear}-${thisYear + 1}`, dueDate: "" });
                 setStudentQuery(""); setStudentResults([]);
-              }}>Add Another</Button>
-              <Button onClick={() => setShowAddModal(false)}>Done</Button>
+              }}>{t("addAnother")}</Button>
+              <Button onClick={() => setShowAddModal(false)}>{t("close")}</Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setShowAddModal(false)} disabled={submitting}>Cancel</Button>
+              <Button variant="outline" onClick={() => setShowAddModal(false)} disabled={submitting}>{t("cancel")}</Button>
               <Button onClick={addForm.handleSubmit(handleAddSubmit)} disabled={submitting} className="gap-2">
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Create Record
+                {t("createRecord")}
               </Button>
             </>
           )}
@@ -592,7 +592,7 @@ export default function FeeManagementPage() {
       {/* ══ Collect Payment Modal ══════════════════════════════════════════════ */}
       <Dialog open={!!payTarget} onClose={() => !submitting && (setPayTarget(null), setPaySuccess(null))} maxWidth="sm">
         <DialogHeader>
-          <DialogTitle>{paySuccess ? "Payment Recorded" : "Collect Payment"}</DialogTitle>
+          <DialogTitle>{paySuccess ? t("paymentRecorded") : t("collectPayment")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && (setPayTarget(null), setPaySuccess(null))} />
         </DialogHeader>
         <DialogContent>
@@ -678,13 +678,13 @@ export default function FeeManagementPage() {
         </DialogContent>
         <DialogFooter>
           {paySuccess ? (
-            <Button onClick={() => { setPayTarget(null); setPaySuccess(null); }}>Close</Button>
+            <Button onClick={() => { setPayTarget(null); setPaySuccess(null); }}>{t("close")}</Button>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setPayTarget(null)} disabled={submitting}>Cancel</Button>
+              <Button variant="outline" onClick={() => setPayTarget(null)} disabled={submitting}>{t("cancel")}</Button>
               <Button variant="success" onClick={payForm.handleSubmit(handlePaySubmit)} disabled={submitting} className="gap-2">
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Confirm Payment
+                {t("confirmPayment")}
               </Button>
             </>
           )}
@@ -695,7 +695,7 @@ export default function FeeManagementPage() {
       {viewTarget && (
         <Dialog open onClose={() => setViewTarget(null)} maxWidth="sm">
           <DialogHeader>
-            <DialogTitle>Fee Details</DialogTitle>
+            <DialogTitle>{t("feeDetails")}</DialogTitle>
             <DialogCloseButton onClose={() => setViewTarget(null)} />
           </DialogHeader>
           <DialogContent>
@@ -709,15 +709,15 @@ export default function FeeManagementPage() {
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                 {[
-                  { label: "Fee Type", value: viewTarget.feeType },
-                  { label: "Total Amount", value: formatCurrency(viewTarget.amount) },
-                  { label: "Paid Amount", value: formatCurrency(viewTarget.paidAmount) },
-                  { label: "Balance", value: formatCurrency(viewTarget.amount - viewTarget.paidAmount) },
-                  { label: "Due Date", value: formatDate(viewTarget.dueDate) },
-                  { label: "Paid Date", value: viewTarget.paidDate ? formatDate(viewTarget.paidDate) : "—" },
-                  { label: "Payment Method", value: viewTarget.paymentMethod || "—" },
-                  { label: "Receipt No.", value: viewTarget.receiptNumber || "—" },
-                  { label: "Remarks", value: viewTarget.remarks || "—" },
+                  { label: t("feeType"), value: viewTarget.feeType },
+                  { label: t("totalAmountLabel"), value: formatCurrency(viewTarget.amount) },
+                  { label: t("paidAmount"), value: formatCurrency(viewTarget.paidAmount) },
+                  { label: t("balance"), value: formatCurrency(viewTarget.amount - viewTarget.paidAmount) },
+                  { label: t("dueDate"), value: formatDate(viewTarget.dueDate) },
+                  { label: t("paidDateLabel"), value: viewTarget.paidDate ? formatDate(viewTarget.paidDate) : "—" },
+                  { label: t("paymentMethodLabel"), value: viewTarget.paymentMethod || "—" },
+                  { label: t("receiptNumber"), value: viewTarget.receiptNumber || "—" },
+                  { label: t("remarks"), value: viewTarget.remarks || "—" },
                 ].map((item) => (
                   <div key={item.label} className="py-2.5 border-b border-gray-100 last:border-0">
                     <p className="text-xs text-gray-400">{item.label}</p>
@@ -728,13 +728,13 @@ export default function FeeManagementPage() {
             </div>
           </DialogContent>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewTarget(null)}>Close</Button>
+            <Button variant="outline" onClick={() => setViewTarget(null)}>{t("close")}</Button>
             {viewTarget.status !== "Paid" && (
               <Button variant="success" onClick={() => {
                 setPayTarget(viewTarget); setViewTarget(null);
                 setFormError(null); setPaySuccess(null);
               }} className="gap-2">
-                <Receipt className="w-4 h-4" /> Collect Payment
+                <Receipt className="w-4 h-4" /> {t("collectPayment")}
               </Button>
             )}
           </DialogFooter>
@@ -744,7 +744,7 @@ export default function FeeManagementPage() {
       {/* ══ Delete Confirm Modal ══════════════════════════════════════════════ */}
       <Dialog open={!!deleteTarget} onClose={() => !submitting && setDeleteTarget(null)} maxWidth="sm">
         <DialogHeader>
-          <DialogTitle>Delete Fee Record</DialogTitle>
+          <DialogTitle>{t("deleteFeeRecord")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setDeleteTarget(null)} />
         </DialogHeader>
         <DialogContent>
@@ -762,10 +762,10 @@ export default function FeeManagementPage() {
           </div>
         </DialogContent>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={submitting}>Cancel</Button>
+          <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={submitting}>{t("cancel")}</Button>
           <Button variant="destructive" onClick={handleDelete} disabled={submitting} className="gap-2">
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Delete
+            {t("delete")}
           </Button>
         </DialogFooter>
       </Dialog>

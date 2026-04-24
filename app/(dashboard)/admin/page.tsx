@@ -89,31 +89,31 @@ export default function AdminDashboard() {
       subtitle: t("activeStudentsLabel"),
       icon: Users,
       gradient: "bg-gradient-to-br from-violet-500 to-purple-700",
-      trend: { value: 0, label: "enrolled" },
+      trend: { value: 0, label: t("enrolledTrend") },
     },
     {
       title: t("totalStaffLabel"),
       value: stats?.totalStaff ?? 0,
-      subtitle: "Teachers & Accountants",
+      subtitle: t("teachersAccountants"),
       icon: UserCheck,
       gradient: "bg-gradient-to-br from-blue-500 to-indigo-700",
-      trend: { value: 0, label: "active" },
+      trend: { value: 0, label: t("activeTrend") },
     },
     {
       title: t("totalClassesLabel"),
       value: stats?.totalClasses ?? 0,
-      subtitle: "Active class groups",
+      subtitle: t("activeClassGroups"),
       icon: BookOpen,
       gradient: "bg-gradient-to-br from-emerald-500 to-teal-700",
-      trend: { value: 0, label: "sections" },
+      trend: { value: 0, label: t("sectionsTrend") },
     },
     {
       title: t("feeCollectedLabel"),
       value: formatCurrency(stats?.feeCollectionMonth ?? 0),
-      subtitle: "This month",
+      subtitle: t("thisMonth"),
       icon: DollarSign,
       gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
-      trend: { value: 0, label: "this month" },
+      trend: { value: 0, label: t("thisMonthTrend") },
     },
     {
       title: t("todayAttendanceLabel"),
@@ -121,15 +121,15 @@ export default function AdminDashboard() {
       subtitle: t("present"),
       icon: CheckCircle,
       gradient: "bg-gradient-to-br from-cyan-500 to-blue-600",
-      trend: { value: 0, label: "today" },
+      trend: { value: 0, label: t("todayTrend") },
     },
     {
       title: t("pendingFeesLabel"),
       value: formatCurrency(stats?.pendingFees ?? 0),
-      subtitle: "Outstanding balance",
+      subtitle: t("outstandingBalance"),
       icon: AlertTriangle,
       gradient: "bg-gradient-to-br from-rose-500 to-red-700",
-      trend: { value: 0, label: "overdue" },
+      trend: { value: 0, label: t("overdueTrend") },
     },
   ];
 
@@ -137,19 +137,19 @@ export default function AdminDashboard() {
   const alerts: { icon: React.ReactNode; title: string; desc: string; color: string }[] = [];
   if (stats) {
     if (stats.attendanceToday > 0 && stats.attendanceToday < 75) {
-      alerts.push({ icon: <AlertTriangle className="w-3.5 h-3.5" />, title: "Low Attendance", desc: `Only ${stats.attendanceToday}% present today`, color: "bg-amber-100 text-amber-600" });
+      alerts.push({ icon: <AlertTriangle className="w-3.5 h-3.5" />, title: t("lowAttendance"), desc: `Only ${stats.attendanceToday}% present today`, color: "bg-amber-100 text-amber-600" });
     }
     if (stats.pendingFees > 0) {
-      alerts.push({ icon: <IndianRupee className="w-3.5 h-3.5" />, title: "Pending Fees", desc: `${formatCurrency(stats.pendingFees)} outstanding balance`, color: "bg-red-100 text-red-600" });
+      alerts.push({ icon: <IndianRupee className="w-3.5 h-3.5" />, title: t("pendingFeesLabel"), desc: `${formatCurrency(stats.pendingFees)} ${t("outstandingBalance")}`, color: "bg-red-100 text-red-600" });
     }
     if (stats.feeCollectionMonth > 0) {
-      alerts.push({ icon: <CheckCircle className="w-3.5 h-3.5" />, title: "Monthly Collection", desc: `${formatCurrency(stats.feeCollectionMonth)} collected this month`, color: "bg-emerald-100 text-emerald-600" });
+      alerts.push({ icon: <CheckCircle className="w-3.5 h-3.5" />, title: t("monthlyCollection"), desc: `${formatCurrency(stats.feeCollectionMonth)} ${t("thisMonth")}`, color: "bg-emerald-100 text-emerald-600" });
     }
     if (stats.totalStudents === 0) {
-      alerts.push({ icon: <UserPlus className="w-3.5 h-3.5" />, title: "No Students Yet", desc: "Start by enrolling students in the Students module", color: "bg-blue-100 text-blue-600" });
+      alerts.push({ icon: <UserPlus className="w-3.5 h-3.5" />, title: t("noStudentsYet"), desc: t("noStudentsEnrolled"), color: "bg-blue-100 text-blue-600" });
     }
     if (alerts.length === 0) {
-      alerts.push({ icon: <CheckCircle className="w-3.5 h-3.5" />, title: "All Good!", desc: "No issues requiring your attention right now", color: "bg-emerald-100 text-emerald-600" });
+      alerts.push({ icon: <CheckCircle className="w-3.5 h-3.5" />, title: t("allGood"), desc: t("noData"), color: "bg-emerald-100 text-emerald-600" });
     }
   }
 
@@ -171,17 +171,17 @@ export default function AdminDashboard() {
             <div className="hidden md:flex items-center gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold">{stats?.totalStudents ?? "—"}</p>
-                <p className="text-white/70 text-xs">Students</p>
+                <p className="text-white/70 text-xs">{t("students")}</p>
               </div>
               <div className="w-px h-10 bg-white/20" />
               <div className="text-center">
                 <p className="text-2xl font-bold">{stats?.totalStaff ?? "—"}</p>
-                <p className="text-white/70 text-xs">Staff</p>
+                <p className="text-white/70 text-xs">{t("staff")}</p>
               </div>
               <div className="w-px h-10 bg-white/20" />
               <div className="text-center">
                 <p className="text-2xl font-bold">{stats?.attendanceToday ?? "—"}%</p>
-                <p className="text-white/70 text-xs">Attendance Today</p>
+                <p className="text-white/70 text-xs">{t("attendanceTodayLabel")}</p>
               </div>
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base">{t("enrollmentTrend")}</CardTitle>
-                <CardDescription>Monthly admissions over the past year</CardDescription>
+                <CardDescription>{t("monthlyAdmissionsDesc")}</CardDescription>
               </div>
               <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-indigo-600" />
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base">{t("attendanceOverview")}</CardTitle>
-                <CardDescription>Present vs Absent percentage</CardDescription>
+                <CardDescription>{t("presentVsAbsent")}</CardDescription>
               </div>
               <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-emerald-600" />
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base">{t("feeAnalysis")}</CardTitle>
-                <CardDescription>Collected vs Pending (₹)</CardDescription>
+                <CardDescription>{t("collectedVsPending")}</CardDescription>
               </div>
               <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-amber-600" />
@@ -285,8 +285,8 @@ export default function AdminDashboard() {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <div>
-              <CardTitle className="text-base">Fee Type Breakdown</CardTitle>
-              <CardDescription>Distribution by fee category</CardDescription>
+              <CardTitle className="text-base">{t("feeTypeBreakdown")}</CardTitle>
+              <CardDescription>{t("feeTypeDist")}</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base">{t("classStrengthTitle")}</CardTitle>
-                <CardDescription>Number of students per class</CardDescription>
+                <CardDescription>{t("studentsPerClassDesc")}</CardDescription>
               </div>
               <div className="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
                 <BarChart2 className="w-5 h-5 text-purple-600" />
@@ -331,7 +331,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base">{t("gradeDistribution")}</CardTitle>
-                <CardDescription>Overall academic performance</CardDescription>
+                <CardDescription>{t("overallAcademic")}</CardDescription>
               </div>
               <div className="w-9 h-9 bg-rose-50 rounded-xl flex items-center justify-center">
                 <GraduationCap className="w-5 h-5 text-rose-600" />
@@ -366,7 +366,7 @@ export default function AdminDashboard() {
             {recentStudents.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-gray-400 gap-2">
                 <Users className="w-8 h-8 opacity-30" />
-                <p className="text-sm">No students enrolled yet</p>
+                <p className="text-sm">{t("noStudentsEnrolled")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -388,9 +388,9 @@ export default function AdminDashboard() {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">School Status</CardTitle>
+              <CardTitle className="text-base">{t("schoolStatus")}</CardTitle>
               <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-semibold">
-                Live
+                {t("liveLabel")}
               </span>
             </div>
           </CardHeader>

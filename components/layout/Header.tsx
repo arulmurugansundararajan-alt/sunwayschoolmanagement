@@ -161,7 +161,7 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                 </div>
                 <div className="p-3 border-t border-gray-100 text-center">
                   <span className="text-xs text-gray-400">
-                    {notifications.length} {notifications.length === 1 ? "notification" : "notifications"}
+                    {notifications.length} {t("notifications")}
                   </span>
                 </div>
               </div>
@@ -205,14 +205,14 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                 </div>
                 <div className="p-2">
                   <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                    Profile Settings
+                    {t("profileSettings")}
                   </button>
                   <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                    Change Password
+                    {t("changePassword")}
                   </button>
                   <hr className="my-2 border-gray-100" />
                   <button className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                    Sign Out
+                    {t("signOut")}
                   </button>
                 </div>
               </div>

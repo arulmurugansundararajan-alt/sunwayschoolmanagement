@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNotifications } from "@/components/providers/NotificationContext";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -81,6 +82,7 @@ function isPastDue(dueDate: string) {
 
 export default function StaffAssignmentsPage() {
   const { addNotification } = useNotifications();
+  const { t } = useLanguage();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -220,7 +222,7 @@ export default function StaffAssignmentsPage() {
                 onChange={(e) => setFilterClass(e.target.value)}
                 className="h-9 px-3 border border-gray-300 rounded-xl text-sm bg-white"
               >
-                <option value="">All Classes</option>
+              <option value="">{t("allClasses")}</option>
                 {SCHOOL_GRADES.map((g) => (
                   <option key={g} value={g}>{g}</option>
                 ))}
@@ -231,7 +233,7 @@ export default function StaffAssignmentsPage() {
                 onChange={(e) => setFilterSubject(e.target.value)}
                 className="h-9 px-3 border border-gray-300 rounded-xl text-sm bg-white"
               >
-                <option value="">All Subjects</option>
+              <option value="">{t("allSubjectsOption")}</option>
                 {allSubjects.map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -247,12 +249,12 @@ export default function StaffAssignmentsPage() {
                 addForm.reset({ academicYear: currentYear });
               }}
             >
-              <Plus className="w-4 h-4" /> New Assignment
+            <Plus className="w-4 h-4" /> {t("newAssignment")}
             </Button>
           </div>
           {!loading && (
             <p className="text-xs text-gray-500 mt-2">
-              {filtered.length} assignment{filtered.length !== 1 ? "s" : ""} total
+              {filtered.length} {t("assignments")} {t("totalAssignments")}
             </p>
           )}
         </CardContent>
@@ -267,7 +269,7 @@ export default function StaffAssignmentsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 text-gray-400">
-          <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading assignments…
+          <Loader2 className="w-5 h-5 animate-spin mr-2" /> {t("loadingAssignments")}
         </div>
       ) : (
         <>
@@ -275,7 +277,7 @@ export default function StaffAssignmentsPage() {
           <div>
             <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-emerald-500" />
-              Upcoming / Active
+              {t("upcomingActive")}
               <span className="ml-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
                 {upcoming.length}
               </span>
@@ -284,7 +286,7 @@ export default function StaffAssignmentsPage() {
               <Card>
                 <div className="flex flex-col items-center justify-center h-32 text-gray-400 gap-2">
                   <ClipboardList className="w-8 h-8 opacity-30" />
-                  <p className="text-sm">No upcoming assignments</p>
+                  <p className="text-sm">{t("noUpcomingAssignments")}</p>
                 </div>
               </Card>
             ) : (
@@ -321,7 +323,7 @@ export default function StaffAssignmentsPage() {
             <div>
               <h2 className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-gray-400" />
-                Past Due
+                {t("pastDue")}
                 <span className="ml-1 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
                   {past.length}
                 </span>
@@ -360,7 +362,7 @@ export default function StaffAssignmentsPage() {
       {/* ── Add Modal ─────────────────────────────────────────────── */}
       <Dialog open={showAdd} onClose={() => !submitting && setShowAdd(false)} maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>{addSuccess ? "Assignment Created" : "New Assignment"}</DialogTitle>
+          <DialogTitle>{addSuccess ? t("assignmentCreatedTitle") : t("newAssignment")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setShowAdd(false)} />
         </DialogHeader>
         <DialogContent>
@@ -370,9 +372,9 @@ export default function StaffAssignmentsPage() {
                 <CheckCircle2 className="w-7 h-7 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Assignment Created!</h3>
+                <h3 className="text-lg font-bold text-gray-900">{t("assignmentCreatedTitle")}</h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Students and parents will see it in their Homework portal.
+                  {t("assignmentVisibility")}
                 </p>
               </div>
             </div>
@@ -387,29 +389,19 @@ export default function StaffAssignmentsPage() {
         <DialogFooter>
           {addSuccess ? (
             <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setAddSuccess(false);
-                  addForm.reset({ academicYear: currentYear });
-                }}
-              >
-                Add Another
+              <Button variant="outline" onClick={() => { setAddSuccess(false); addForm.reset({ academicYear: currentYear }); }}>
+                {t("addAnother")}
               </Button>
-              <Button onClick={() => setShowAdd(false)}>Done</Button>
+              <Button onClick={() => setShowAdd(false)}>{t("close")}</Button>
             </>
           ) : (
             <>
               <Button variant="outline" onClick={() => setShowAdd(false)} disabled={submitting}>
-                Cancel
+                {t("cancel")}
               </Button>
-              <Button
-                onClick={addForm.handleSubmit(handleAdd)}
-                disabled={submitting}
-                className="gap-2"
-              >
+              <Button onClick={addForm.handleSubmit(handleAdd)} disabled={submitting} className="gap-2">
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Create Assignment
+                {t("createAssignment")}
               </Button>
             </>
           )}
@@ -419,7 +411,7 @@ export default function StaffAssignmentsPage() {
       {/* ── Edit Modal ────────────────────────────────────────────── */}
       <Dialog open={!!editTarget} onClose={() => !submitting && setEditTarget(null)} maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>Edit Assignment</DialogTitle>
+          <DialogTitle>{t("editAssignmentTitle")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setEditTarget(null)} />
         </DialogHeader>
         <DialogContent>
@@ -432,15 +424,11 @@ export default function StaffAssignmentsPage() {
         </DialogContent>
         <DialogFooter>
           <Button variant="outline" onClick={() => setEditTarget(null)} disabled={submitting}>
-            Cancel
+            {t("cancel")}
           </Button>
-          <Button
-            onClick={editForm.handleSubmit(handleEdit)}
-            disabled={submitting}
-            className="gap-2"
-          >
+          <Button onClick={editForm.handleSubmit(handleEdit)} disabled={submitting} className="gap-2">
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save Changes
+            {t("saveChanges")}
           </Button>
         </DialogFooter>
       </Dialog>
@@ -452,7 +440,7 @@ export default function StaffAssignmentsPage() {
         maxWidth="sm"
       >
         <DialogHeader>
-          <DialogTitle>Delete Assignment</DialogTitle>
+          <DialogTitle>{t("deleteAssignmentTitle")}</DialogTitle>
           <DialogCloseButton onClose={() => !submitting && setDeleteTarget(null)} />
         </DialogHeader>
         <DialogContent>
@@ -471,11 +459,11 @@ export default function StaffAssignmentsPage() {
         </DialogContent>
         <DialogFooter>
           <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={submitting}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button variant="destructive" onClick={handleDelete} disabled={submitting} className="gap-2">
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Delete
+            {t("delete")}
           </Button>
         </DialogFooter>
       </Dialog>
@@ -495,6 +483,7 @@ function AssignmentCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useLanguage();
   const daysLeft = Math.ceil(
     (new Date(a.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -522,7 +511,7 @@ function AssignmentCard({
             {(!a.targetType || a.targetType === "class") && (
               <span className="inline-flex items-center gap-1 mt-1 text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full border border-gray-200">
                 <Users className="w-2.5 h-2.5" />
-                Whole class
+                {t("wholeClassBadge")}
               </span>
             )}
           </div>
@@ -538,22 +527,22 @@ function AssignmentCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <Calendar className="w-3.5 h-3.5" />
-            Due: {formatDate(a.dueDate)}
+            {t("dueDateCard")} {formatDate(a.dueDate)}
             {!isPast && (
               <Badge
                 variant={daysLeft <= 2 ? "destructive" : "success"}
                 className="ml-1 text-xs"
               >
                 {daysLeft === 0
-                  ? "Today"
+                  ? t("todayLabel")
                   : daysLeft === 1
-                  ? "Tomorrow"
+                  ? t("tomorrowLabel")
                   : `${daysLeft}d left`}
               </Badge>
             )}
             {isPast && (
               <Badge variant="secondary" className="ml-1 text-xs">
-                Past Due
+                {t("pastDue")}
               </Badge>
             )}
           </div>
@@ -589,6 +578,7 @@ function AssignmentForm({
   formError: string | null;
   editMode?: boolean;
 }) {
+  const { t } = useLanguage();
   const { register, formState: { errors }, watch, setValue } = form;
   const dueDate = watch("dueDate");
   const targetType = watch("targetType") || "class";
@@ -621,7 +611,7 @@ function AssignmentForm({
 
       {/* Target Type toggle */}
       <div>
-        <label className="text-xs font-medium text-gray-600 block mb-2">Assign To *</label>
+        <label className="text-xs font-medium text-gray-600 block mb-2">{t("assignTo")} *</label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -634,7 +624,7 @@ function AssignmentForm({
             } disabled:opacity-60`}
           >
             <Users className="w-4 h-4" />
-            Whole Class
+            {t("wholeClass")}
           </button>
           <button
             type="button"
@@ -647,7 +637,7 @@ function AssignmentForm({
             } disabled:opacity-60`}
           >
             <User className="w-4 h-4" />
-            Specific Student
+            {t("specificStudent")}
           </button>
         </div>
       </div>
