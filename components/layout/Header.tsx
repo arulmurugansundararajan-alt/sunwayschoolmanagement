@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Bell, Search, Menu, X, ChevronDown, CalendarDays, Megaphone } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -211,7 +211,10 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                     {t("changePassword")}
                   </button>
                   <hr className="my-2 border-gray-100" />
-                  <button className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                  <button
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
                     {t("signOut")}
                   </button>
                 </div>

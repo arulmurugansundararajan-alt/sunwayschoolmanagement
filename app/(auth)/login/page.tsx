@@ -7,10 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
-import {
-  Eye, EyeOff, Lock, Mail, Shield,
-  Users, UserCheck, ChevronRight,
-} from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, LogIn } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const loginSchema = z.object({
@@ -19,39 +16,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
-
-const demoCredentials = [
-  {
-    role: "Admin",
-    email: "admin@sunwayglobalschool.edu",
-    password: "admin123",
-    icon: Shield,
-    color: "from-sky-600 to-blue-600",
-    bg: "bg-sky-50 border-sky-200",
-    textColor: "text-sky-700",
-    description: "Full system access",
-  },
-  {
-    role: "Staff",
-    email: "staff@sunwayglobalschool.edu",
-    password: "staff123",
-    icon: UserCheck,
-    color: "from-emerald-600 to-teal-600",
-    bg: "bg-emerald-50 border-emerald-200",
-    textColor: "text-emerald-700",
-    description: "Teacher portal",
-  },
-  {
-    role: "Parent",
-    email: "parent@sunwayglobalschool.edu",
-    password: "parent123",
-    icon: Users,
-    color: "from-purple-600 to-violet-600",
-    bg: "bg-purple-50 border-purple-200",
-    textColor: "text-purple-700",
-    description: "Parent portal",
-  },
-];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,7 +27,6 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -74,34 +37,33 @@ export default function LoginPage() {
     setError("");
     try {
       const result = await signIn("credentials", {
-        email: data.email,
+        email:    data.email,
         password: data.password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        // Surface rate-limit messages that were thrown in authorize()
+        setError(
+          result.error.includes("Too many")
+            ? result.error
+            : "Invalid email or password. Please try again."
+        );
       } else {
-        // Fetch session to get the actual role
+        // Fetch the session to determine which portal to open
         const { getSession } = await import("next-auth/react");
         const sess = await getSession();
         const role = (sess?.user as { role?: string })?.role;
-        if (role === "admin") router.push("/admin");
-        else if (role === "staff") router.push("/staff");
+        if      (role === "admin")  router.push("/admin");
+        else if (role === "staff")  router.push("/staff");
         else if (role === "parent") router.push("/parent");
-        else router.push("/parent");
+        else                        router.push("/parent");
       }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fillDemo = (email: string, password: string) => {
-    setValue("email", email);
-    setValue("password", password);
-    setError("");
   };
 
   return (
@@ -126,7 +88,14 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-50 to-blue-50 border-2 border-blue-100 shadow-md flex items-center justify-center p-1">
-              <Image src="/logo.png" alt="Sunway Global School" width={88} height={88} priority className="object-contain" />
+              <Image
+                src="/logo.png"
+                alt="Sunway Global School"
+                width={88}
+                height={88}
+                priority
+                className="object-contain"
+              />
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Sunway Global School</h1>
@@ -140,43 +109,8 @@ export default function LoginPage() {
             <p className="text-gray-500 text-sm">{t("signInPortal")}</p>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              Quick Demo Access
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {demoCredentials.map((cred) => (
-                <button
-                  key={cred.role}
-                  type="button"
-                  onClick={() => fillDemo(cred.email, cred.password)}
-                  className={`${cred.bg} border rounded-xl p-3 text-center hover:shadow-md transition-all duration-200 hover:scale-105`}
-                >
-                  <div
-                    className={`w-8 h-8 bg-gradient-to-br ${cred.color} rounded-lg flex items-center justify-center mx-auto mb-1.5 shadow-sm`}
-                  >
-                    <cred.icon className="w-4 h-4 text-white" />
-                  </div>
-                  <p className={`text-xs font-semibold ${cred.textColor}`}>{cred.role}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{cred.description}</p>
-                </button>
-              ))}
-            </div>
-            <p className="text-center text-xs text-gray-400 mt-2">Click a role to auto-fill</p>
-          </div>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 font-medium">Or enter manually</span>
-            </div>
-          </div>
-
           {/* Login Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -186,6 +120,7 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {t("emailAddress")}
@@ -195,6 +130,7 @@ export default function LoginPage() {
                 <input
                   {...register("email")}
                   type="email"
+                  autoComplete="email"
                   placeholder="Enter your email"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
                 />
@@ -204,6 +140,7 @@ export default function LoginPage() {
               )}
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {t("password")}
@@ -213,15 +150,21 @@ export default function LoginPage() {
                 <input
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
               {errors.password && (
@@ -229,6 +172,7 @@ export default function LoginPage() {
               )}
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
@@ -237,12 +181,12 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  {t("loading")}
                 </>
               ) : (
                 <>
+                  <LogIn className="w-4 h-4" />
                   {t("signIn")}
-                  <ChevronRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -256,3 +200,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
