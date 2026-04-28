@@ -87,14 +87,14 @@ export default function LoginPage() {
         {/* Logo & School Name */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-50 to-blue-50 border-2 border-blue-100 shadow-md flex items-center justify-center p-1">
-              <Image
-                src="/logo.png"
+            <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-blue-50 border-2 border-blue-100 shadow-md flex items-center justify-center p-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sunwaylogo.jpeg"
                 alt="Sunway Global School"
                 width={88}
                 height={88}
-                priority
-                className="object-contain"
+                className="rounded-xl object-contain"
               />
             </div>
           </div>

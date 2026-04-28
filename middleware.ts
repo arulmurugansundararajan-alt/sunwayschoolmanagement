@@ -85,6 +85,6 @@ export const config = {
      *  - /login        (auth page)
      *  - /api/auth/*   (NextAuth endpoints)
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|logo\\.png|public/|login|api/auth).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|logo\\.png|sunwaylogo\\.jpeg|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp)|login|api/auth).*)",
   ],
 };

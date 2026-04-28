@@ -161,7 +161,7 @@ export default function Sidebar({ role, staffRole, hiddenNavItems = [] }: Sideba
       <div className="p-4 border-b border-white/10">
         <Link href={`/${role}`} className="flex items-center gap-3">
           <div className="w-9 h-9 flex-shrink-0 rounded-lg bg-white p-0.5 shadow-sm">
-            <Image src="/logo.png" alt="Sunway" width={36} height={36} className="w-full h-full object-contain" />
+            <Image src="/sunwaylogo.jpeg" alt="Sunway" width={36} height={36} className="w-full object-contain" style={{ height: 'auto' }} />
           </div>
           {!collapsed && (
             <div>

@@ -4,6 +4,7 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   serverExternalPackages: ["mongoose", "bcryptjs"],
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "api.dicebear.com" },
       { protocol: "https", hostname: "ui-avatars.com" },
